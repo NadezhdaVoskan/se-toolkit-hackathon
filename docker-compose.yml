@@ -1,0 +1,91 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: voice-weekly-planner-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-voice_weekly_planner}
+      POSTGRES_USER: ${POSTGRES_USER:-planner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-planner}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-planner} -d ${POSTGRES_DB:-voice_weekly_planner}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: voice-weekly-planner-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_NAME: ${APP_NAME:-Voice Weekly Planner API}
+      API_PREFIX: ${API_PREFIX:-/api}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-planner}:${POSTGRES_PASSWORD:-planner}@db:5432/${POSTGRES_DB:-voice_weekly_planner}
+      ALLOWED_ORIGINS: http://localhost:${FRONTEND_PORT:-3000}
+      TRANSCRIPTION_PROVIDER: ${TRANSCRIPTION_PROVIDER:-auto}
+      WHISPER_API_KEY: ${WHISPER_API_KEY:-}
+      WHISPER_MODEL: ${WHISPER_MODEL:-whisper-1}
+      WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}
+      WHISPER_API_URL: ${WHISPER_API_URL:-}
+      LOCAL_WHISPER_MODEL: ${LOCAL_WHISPER_MODEL:-medium}
+      LOCAL_WHISPER_DEVICE: ${LOCAL_WHISPER_DEVICE:-cpu}
+      LOCAL_WHISPER_COMPUTE_TYPE: ${LOCAL_WHISPER_COMPUTE_TYPE:-int8}
+      LOCAL_WHISPER_DOWNLOAD_ROOT: ${LOCAL_WHISPER_DOWNLOAD_ROOT:-.cache/faster-whisper}
+      TASK_EXTRACTION_PROVIDER: ${TASK_EXTRACTION_PROVIDER:-auto}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_API_URL: ${LLM_API_URL:-}
+      COMMAND_PARSER_PROVIDER: ${COMMAND_PARSER_PROVIDER:-auto}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+    command: sh /app/start.sh
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: voice-weekly-planner-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev -- --hostname 0.0.0.0 --port 3000
+
+  # ollama:
+  #   build:
+  #     context: ./local_ollama
+  #   container_name: voice-weekly-planner-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   restart: unless-stopped
+  #   environment:
+  #     - OLLAMA_KEEP_ALIVE=24h
+  #     - OLLAMA_HOST=0.0.0.0
+
+volumes:
+  postgres_data:
+  ollama_data:

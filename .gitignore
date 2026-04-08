@@ -1,0 +1,14 @@
+node_modules/
+.next/
+dist/
+coverage/
+.cache/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+frontend/.env
+backend/.env
+
+frontend/node_modules/
