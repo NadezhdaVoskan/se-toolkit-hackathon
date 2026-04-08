@@ -5,6 +5,7 @@ import type { WorkflowPhase } from "@/types/workflow";
 type AudioRecorderCardProps = {
   audioPreviewUrl: string | null;
   canUpload: boolean;
+  fileInputId: string;
   isProcessing: boolean;
   isRecording: boolean;
   isRecorderSupported: boolean;
@@ -14,6 +15,7 @@ type AudioRecorderCardProps = {
   title: string;
   uploadLabel: string;
   description: string;
+  onFileSelected: (file: File | null) => void;
   onStartRecording: () => Promise<void>;
   onStopRecording: () => void;
   onUpload: () => Promise<void>;
@@ -22,6 +24,7 @@ type AudioRecorderCardProps = {
 export function AudioRecorderCard({
   audioPreviewUrl,
   canUpload,
+  fileInputId,
   isProcessing,
   isRecording,
   isRecorderSupported,
@@ -31,6 +34,7 @@ export function AudioRecorderCard({
   title,
   uploadLabel,
   description,
+  onFileSelected,
   onStartRecording,
   onStopRecording,
   onUpload,
@@ -56,7 +60,7 @@ export function AudioRecorderCard({
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <button
             className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={!isRecorderSupported || isRecording || isProcessing}
@@ -75,6 +79,22 @@ export function AudioRecorderCard({
           >
             Stop Recording
           </button>
+          <label
+            className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+            htmlFor={fileInputId}
+          >
+            Choose Audio File
+          </label>
+          <input
+            accept="audio/*"
+            className="sr-only"
+            id={fileInputId}
+            onChange={(event) => {
+              onFileSelected(event.target.files?.[0] ?? null);
+              event.currentTarget.value = "";
+            }}
+            type="file"
+          />
           <button
             className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
             disabled={!canUpload || isRecording || isProcessing}
@@ -92,7 +112,7 @@ export function AudioRecorderCard({
           <p className="mt-1 text-sm leading-6 text-slate-500">
             {audioPreviewUrl
               ? "Listen back before uploading."
-              : previewEmptyText}
+              : `${previewEmptyText} You can also choose an existing audio file.`}
           </p>
           {audioPreviewUrl ? (
             <audio className="mt-4 w-full" controls src={audioPreviewUrl}>

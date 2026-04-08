@@ -210,6 +210,7 @@ export function PlannerClient() {
           audioPreviewUrl={noteRecorder.audioPreviewUrl}
           canUpload={Boolean(noteRecorder.recordedFile)}
           description="Record a spoken note, then upload it for transcription and task extraction."
+          fileInputId="voice-note-file-input"
           isProcessing={
             notePhase === "uploading" ||
             notePhase === "transcribing" ||
@@ -222,6 +223,7 @@ export function PlannerClient() {
           previewTitle="Planning note preview"
           title="Voice Note Recorder"
           uploadLabel="Upload Voice Note"
+          onFileSelected={noteRecorder.setSelectedFile}
           onStartRecording={startNoteRecording}
           onStopRecording={noteRecorder.stopRecording}
           onUpload={uploadTaskAudio}
@@ -237,6 +239,7 @@ export function PlannerClient() {
           audioPreviewUrl={commandRecorder.audioPreviewUrl}
           canUpload={Boolean(commandRecorder.recordedFile)}
           description='Try commands like "add buy groceries on Thursday" or "move presentation to Friday".'
+          fileInputId="voice-command-file-input"
           isProcessing={
             commandPhase === "uploading" ||
             commandPhase === "transcribing" ||
@@ -249,6 +252,7 @@ export function PlannerClient() {
           previewTitle="Voice command preview"
           title="Voice Commands"
           uploadLabel="Run Voice Command"
+          onFileSelected={commandRecorder.setSelectedFile}
           onStartRecording={startCommandRecording}
           onStopRecording={commandRecorder.stopRecording}
           onUpload={uploadCommandAudio}

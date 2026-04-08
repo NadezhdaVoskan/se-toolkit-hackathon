@@ -102,6 +102,20 @@ export function useAudioRecorder(filenamePrefix: string) {
     setAudioPreviewUrl(null);
   }
 
+  function setSelectedFile(file: File | null) {
+    clearRecording();
+
+    if (!file) {
+      return;
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(file);
+    audioPreviewUrlRef.current = nextPreviewUrl;
+    setAudioPreviewUrl(nextPreviewUrl);
+    setRecordedFile(file);
+    setIsRecording(false);
+  }
+
   function cleanup() {
     stopStream();
     if (audioPreviewUrlRef.current) {
@@ -120,6 +134,7 @@ export function useAudioRecorder(filenamePrefix: string) {
     isRecorderSupported,
     isRecording,
     recordedFile,
+    setSelectedFile,
     startRecording,
     stopRecording,
   };
