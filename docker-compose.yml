@@ -64,7 +64,8 @@ services:
       backend:
         condition: service_healthy
     environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
       ALLOWED_DEV_ORIGINS: ${ALLOWED_DEV_ORIGINS:-10.93.25.188,localhost,127.0.0.1}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
