@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -13,6 +15,19 @@ from app.services.audio_upload import save_upload_to_temporary_file, validate_au
 from app.services.task_extraction import get_task_extraction_service
 from app.services.task_service import create_tasks
 from app.services.transcription import TranscriptionServiceError, get_transcription_service
+
+
+def normalize_voice_note_tasks(tasks: list[TaskCreate]) -> list[TaskCreate]:
+    today = date.today()
+    return [
+        task.model_copy(
+            update={
+                "day_of_week": None,
+                "due_date": task.due_date or today,
+            }
+        )
+        for task in tasks
+    ]
 
 
 async def create_voice_note_from_upload(
@@ -32,7 +47,9 @@ async def create_voice_note_from_upload(
             original_filename=upload.filename or "uploaded-audio",
         )
         print("transcript",transcript)
-        extracted_tasks = await task_extraction_service.extract_tasks(transcript)
+        extracted_tasks = normalize_voice_note_tasks(
+            await task_extraction_service.extract_tasks(transcript)
+        )
         print("extracted_tasks",transcript)
     except NotImplementedError as exc:
         raise HTTPException(
@@ -101,7 +118,9 @@ async def process_voice_note_upload(
             file_path=temp_file_path,
             original_filename=upload.filename or "uploaded-audio",
         )
-        extracted_tasks = await task_extraction_service.extract_tasks(transcript)
+        extracted_tasks = normalize_voice_note_tasks(
+            await task_extraction_service.extract_tasks(transcript)
+        )
     except NotImplementedError as exc:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -143,9 +162,10 @@ def confirm_voice_note_tasks(
         db.commit()
         db.refresh(voice_note)
 
+        normalized_tasks = normalize_voice_note_tasks(payload.tasks)
         linked_tasks = [
             task.model_copy(update={"source_voice_note_id": voice_note.id})
-            for task in payload.tasks
+            for task in normalized_tasks
         ]
         created_tasks = create_tasks(db, linked_tasks, user_id) if linked_tasks else []
     except SQLAlchemyError as exc:

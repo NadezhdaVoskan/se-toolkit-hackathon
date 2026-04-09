@@ -190,7 +190,7 @@ export function PlannerClient() {
           id: `draft-${Date.now()}-${index}`,
           title: task.title,
           description: task.description ?? null,
-          day_of_week: task.day_of_week ?? null,
+          day_of_week: null,
           due_date: task.due_date ?? null,
           status: task.status ?? "todo",
           source_voice_note_id: task.source_voice_note_id ?? null,
@@ -284,7 +284,7 @@ export function PlannerClient() {
 
   function updateDetectedTaskField(
     taskId: string,
-    field: "title" | "description" | "day_of_week" | "due_date",
+    field: "title" | "description" | "due_date",
     value: string,
   ) {
     setDetectedTasks((currentTasks) =>
@@ -292,10 +292,7 @@ export function PlannerClient() {
         task.id === taskId
           ? {
               ...task,
-              [field]:
-                field === "day_of_week" || field === "due_date"
-                  ? value || null
-                  : value,
+              [field]: field === "due_date" ? value || null : value,
             }
           : task,
       ),
@@ -321,7 +318,7 @@ export function PlannerClient() {
       .map((task) => ({
         title: task.title.trim(),
         description: task.description?.trim() || null,
-        day_of_week: task.day_of_week,
+        day_of_week: null,
         due_date: task.due_date,
         status: "todo" as const,
         source_voice_note_id: null,
@@ -345,7 +342,7 @@ export function PlannerClient() {
           id: task.id,
           title: task.title,
           description: task.description,
-          day_of_week: task.day_of_week,
+          day_of_week: null,
           due_date: task.due_date,
           status: task.status,
           source_voice_note_id: task.source_voice_note_id,

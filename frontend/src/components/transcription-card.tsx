@@ -10,7 +10,7 @@ type TranscriptionCardProps = {
   onDeleteDetectedTask: (taskId: string) => void;
   onDetectedTaskFieldChange: (
     taskId: string,
-    field: "title" | "description" | "day_of_week" | "due_date",
+    field: "title" | "description" | "due_date",
     value: string,
   ) => void;
   onSaveDetectedTasks: () => Promise<void>;

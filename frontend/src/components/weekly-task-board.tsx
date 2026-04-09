@@ -243,7 +243,7 @@ export function WeeklyTaskBoard({
                               ) : null}
                               {task.due_date ? (
                                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
-                                  {task.due_date}
+                                  {formatTaskDueDate(task.due_date)}
                                 </p>
                               ) : null}
                             </div>
@@ -411,4 +411,17 @@ function getDayOfWeekFromDate(date: Date): DayOfWeek {
     "Saturday",
   ];
   return mapping[index];
+}
+
+function formatTaskDueDate(value: string): string {
+  const parsedDate = parseLocalDate(value);
+  if (!parsedDate) {
+    return value;
+  }
+
+  return parsedDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }

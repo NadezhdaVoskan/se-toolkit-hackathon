@@ -1,6 +1,6 @@
 import React from "react";
 
-import type { DayOfWeek, TaskDraft } from "@/types/task";
+import type { TaskDraft } from "@/types/task";
 
 type TaskDraftEditorProps = {
   drafts: TaskDraft[];
@@ -8,22 +8,11 @@ type TaskDraftEditorProps = {
   onDelete: (taskId: string) => void;
   onFieldChange: (
     taskId: string,
-    field: "title" | "description" | "day_of_week" | "due_date",
+    field: "title" | "description" | "due_date",
     value: string,
   ) => void;
   onSave: () => Promise<void>;
 };
-
-const weekdayOptions: Array<DayOfWeek | ""> = [
-  "",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
 
 export function TaskDraftEditor({
   drafts,
@@ -84,36 +73,17 @@ export function TaskDraftEditor({
               />
             </label>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Day
-                <select
-                  className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm normal-case tracking-normal text-slate-900 outline-none transition focus:border-emerald-500"
-                  onChange={(event) => {
-                    onFieldChange(task.id, "day_of_week", event.target.value);
-                  }}
-                  value={task.day_of_week ?? ""}
-                >
-                  {weekdayOptions.map((option) => (
-                    <option key={option || "none"} value={option}>
-                      {option || "No day"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Date
-                <input
-                  className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm normal-case tracking-normal text-slate-900 outline-none transition focus:border-emerald-500"
-                  onChange={(event) => {
-                    onFieldChange(task.id, "due_date", event.target.value);
-                  }}
-                  type="date"
-                  value={task.due_date ?? ""}
-                />
-              </label>
-            </div>
+            <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Date
+              <input
+                className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm normal-case tracking-normal text-slate-900 outline-none transition focus:border-emerald-500"
+                onChange={(event) => {
+                  onFieldChange(task.id, "due_date", event.target.value);
+                }}
+                type="date"
+                value={task.due_date ?? ""}
+              />
+            </label>
           </div>
         </div>
       ))}
