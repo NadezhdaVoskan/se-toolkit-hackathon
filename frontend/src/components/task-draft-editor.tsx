@@ -78,7 +78,7 @@ export function TaskDraftEditor({
               Date
               <EnglishDateInput
                 calendarPlacement="top"
-                className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm normal-case tracking-normal text-slate-900 outline-none transition focus:border-emerald-500"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm normal-case tracking-normal text-slate-900 outline-none transition focus:border-emerald-500"
                 onChange={(value) => {
                   onFieldChange(task.id, "due_date", value);
                 }}
