@@ -2,7 +2,6 @@ import type {
   Task,
   TaskUpdatePayload,
   UploadVoiceNoteResponse,
-  VoiceCommandResponse,
 } from "@/types/task";
 
 const API_BASE_URL =
@@ -35,16 +34,6 @@ export async function updateTask(
     },
     body: JSON.stringify(payload),
   }, "Task update failed.");
-}
-
-export async function uploadVoiceCommand(file: File): Promise<VoiceCommandResponse> {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  return apiRequest<VoiceCommandResponse>("/api/voice-commands/upload", {
-    method: "POST",
-    body: formData,
-  }, "Voice command upload failed.");
 }
 
 async function apiRequest<T>(

@@ -34,17 +34,3 @@ export type UploadVoiceNoteResponse = {
   voice_note: VoiceNote;
   extracted_tasks: Task[];
 };
-
-export type ParsedVoiceCommand = {
-  intent: "add" | "mark_done" | "delete" | "move" | "unknown";
-  task_title: string | null;
-  day_of_week: DayOfWeek | null;
-};
-
-export type VoiceCommandResponse = {
-  success: boolean;
-  transcription_text: string;
-  action_summary: string;
-  command: ParsedVoiceCommand;
-  affected_task: Task | null;
-};

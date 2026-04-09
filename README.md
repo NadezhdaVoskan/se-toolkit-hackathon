@@ -1,26 +1,18 @@
 # Voice Weekly Planner
 
-Voice Weekly Planner is a student project that turns spoken notes into structured weekly tasks and lets users manage those tasks with voice commands.
+Voice Weekly Planner is a student project that turns spoken planning notes into structured weekly tasks.
 
 The project is built as a small monorepo with a Next.js frontend, a FastAPI backend, and PostgreSQL for persistence. It is designed to be simple enough for a university course project while still following a clean service-based structure and a Docker-based local development workflow.
 
 ## Project Description
 
-The application supports two main ideas:
+The application focuses on one main flow:
 
-- `Version 1`: record or upload a spoken planning note, transcribe it, extract tasks, and show them in a weekly task list.
-- `Version 2`: record a voice command, classify the command, extract the command data, and apply task updates such as add, mark done, delete, or move.
+- Record or upload a spoken planning note, transcribe it, extract tasks, and show them in a weekly task list.
 
 Example planning note:
 
 - "I need to finish math homework on Monday and prepare slides on Wednesday."
-
-Example voice commands:
-
-- "mark finish math homework as done"
-- "add buy groceries on Thursday"
-- "delete call Anna"
-- "move presentation to Friday"
 
 ## Tech Stack
 
@@ -57,7 +49,7 @@ Example voice commands:
 - `backend/app/api/routes`
   FastAPI route handlers.
 - `backend/app/services`
-  Transcription, task extraction, voice command parsing, and shared upload logic.
+  Transcription, task extraction, and shared upload logic.
 - `backend/app/models`
   SQLAlchemy models.
 - `backend/app/schemas`
@@ -94,18 +86,7 @@ For planning notes:
 6. Backend stores the voice note and extracted tasks.
 7. Frontend refreshes and displays the weekly task list.
 
-For voice commands:
-
-1. User records a command in the web app.
-2. Frontend uploads the command audio to the backend.
-3. Backend transcribes the audio.
-4. Backend classifies and parses the command.
-5. Backend applies the command to matching tasks in the database.
-6. Frontend refreshes the task list and shows a clear action summary.
-
-## Version Overview
-
-### Version 1
+## Current Capabilities
 
 - Record a spoken planning note
 - Upload audio to backend
@@ -114,15 +95,6 @@ For voice commands:
 - Save tasks in PostgreSQL
 - Display tasks grouped by weekday
 - Manually mark tasks as done from the UI
-
-### Version 2
-
-- Reuse the same speech-to-text pipeline for voice commands
-- Parse command intent and data
-- Support `add`, `mark_done`, `delete`, and `move`
-- Apply task updates in the database
-- Return an action summary after each command
-- Show a dedicated voice-command section in the frontend
 
 ## Setup
 
@@ -164,10 +136,9 @@ Used by Docker Compose.
 | `LOCAL_WHISPER_COMPUTE_TYPE` | Local faster-whisper compute type | `int8` |
 | `LOCAL_WHISPER_DOWNLOAD_ROOT` | Writable folder for local model downloads | `.cache/faster-whisper` |
 | `TASK_EXTRACTION_PROVIDER` | Task extraction provider mode | `auto` or `mock` |
-| `LLM_API_KEY` | LLM API key for extraction and command parsing | empty by default |
+| `LLM_API_KEY` | LLM API key for task extraction | empty by default |
 | `LLM_MODEL` | LLM model name | `gpt-4o-mini` |
 | `LLM_API_URL` | Optional custom LLM endpoint | empty by default |
-| `COMMAND_PARSER_PROVIDER` | Voice-command parser mode | `auto` or `mock` |
 
 ### Backend `.env`
 
@@ -192,7 +163,6 @@ Used when running the backend directly without Docker.
 | `LLM_API_KEY` | LLM API key |
 | `LLM_MODEL` | LLM model |
 | `LLM_API_URL` | Optional custom LLM URL |
-| `COMMAND_PARSER_PROVIDER` | Voice-command parser selection |
 
 ### Frontend `.env`
 
@@ -360,17 +330,6 @@ npm run dev
 5. Review the extracted weekly tasks.
 6. Mark tasks as done manually if needed.
 
-### Voice command flow
-
-1. Record a voice command such as:
-   - `add buy groceries on Thursday`
-   - `mark finish math homework as done`
-   - `delete call Anna`
-   - `move presentation to Friday`
-2. Upload the command audio.
-3. Review the recognized command text and action summary.
-4. Check the refreshed weekly task list.
-
 ## API Endpoint Documentation
 
 Base URL: `/api`
@@ -409,11 +368,6 @@ Base URL: `/api`
 
 - `POST /api/voice-notes/upload`
   Uploads a planning note audio file, stores transcription text, extracts tasks, and returns the created voice note with extracted tasks.
-
-### Voice commands
-
-- `POST /api/voice-commands/upload`
-  Uploads a voice command audio file, transcribes it, parses the command, applies the task update, and returns an action summary.
 
 ## Testing
 
@@ -468,24 +422,21 @@ For a simple server deployment later, the same containers can be reused with dif
 
 - Local transcription depends on `faster-whisper` and FFmpeg being installed on the machine running the backend.
 - OpenAI API transcription depends on a valid `WHISPER_API_KEY` and external OpenAI API availability.
-- LLM-based task extraction and command parsing are placeholders and not yet connected to a real API.
-- Voice-command matching uses simple tolerant string matching, so ambiguous commands may update the wrong task.
+- LLM-based task extraction is still a placeholder and is not yet connected to a real API.
 - There is no authentication or per-user data separation.
 - The project is designed for a single-user demo scenario.
 
 ## Future Improvements
 
 - Add automated tests for both local faster-whisper transcription and OpenAI API transcription.
-- Integrate a real LLM for task extraction and command parsing.
+- Integrate a real LLM for task extraction.
 - Add user authentication and user-specific task lists.
-- Add stronger fuzzy matching or task IDs in command follow-ups.
 - Add more automated tests, especially end-to-end frontend tests.
 - Add better task metadata such as due time, priority, and categories.
 
 ## What Was Simplified For Submission
 
 - Environment variable naming was made more consistent around `LLM_API_KEY` instead of mixing generic and provider-specific naming.
-- The shared recorder UI was renamed to better reflect that it is used for both planning notes and voice commands.
 - The README now documents the system as a single coherent project instead of incremental development notes.
 
 ## TA Demonstration Checklist
@@ -496,7 +447,5 @@ For a simple server deployment later, the same containers can be reused with dif
 - Show the returned transcription text
 - Show extracted tasks grouped by weekday
 - Mark one task as done manually
-- Record and run one voice command such as `add buy groceries on Thursday`
-- Record and run one command such as `move presentation to Friday` or `mark finish math homework as done`
-- Show the updated task list after the command
+- Show the updated task list after extraction
 - Open `http://localhost:8000/docs` and briefly show the documented API endpoints

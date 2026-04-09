@@ -24,8 +24,6 @@ class TranscriptionService(Protocol):
 class MockTranscriptionService:
     async def transcribe(self, file_path: Path, original_filename: str) -> str:
         del file_path
-        if "voice-command" in original_filename.lower():
-            return "Add buy groceries on Thursday."
         return (
             f"Review project timeline on Monday. "
             f"Prepare presentation slides on Wednesday. "

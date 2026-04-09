@@ -1,3 +1,4 @@
+import React from "react";
 import { SectionCard } from "@/components/section-card";
 import type { DayOfWeek, Task } from "@/types/task";
 

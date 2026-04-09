@@ -22,7 +22,6 @@ class Settings(BaseSettings):
     llm_api_key: str | None = None
     llm_model: str = "gpt-4o-mini"
     llm_api_url: str | None = None
-    command_parser_provider: str = "local"
 
     model_config = SettingsConfigDict(
         env_file=".env",
