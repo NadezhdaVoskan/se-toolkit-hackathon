@@ -29,7 +29,7 @@ services:
       APP_NAME: ${APP_NAME:-Voice Weekly Planner API}
       API_PREFIX: ${API_PREFIX:-/api}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-planner}:${POSTGRES_PASSWORD:-planner}@db:5432/${POSTGRES_DB:-voice_weekly_planner}
-      ALLOWED_ORIGINS: http://localhost:${FRONTEND_PORT:-3000}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://10.93.25.188,http://localhost:3000,http://127.0.0.1:3000}
       AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:-change-me-in-production}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
       TRANSCRIPTION_PROVIDER: ${TRANSCRIPTION_PROVIDER:-auto}
@@ -45,8 +45,8 @@ services:
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
       LLM_API_URL: ${LLM_API_URL:-}
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+    expose:
+      - "8000"
     volumes:
       - ./backend:/app
     command: sh /app/start.sh
@@ -68,13 +68,29 @@ services:
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
       ALLOWED_DEV_ORIGINS: ${ALLOWED_DEV_ORIGINS:-10.93.25.188,localhost,127.0.0.1}
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+    expose:
+      - "3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
     command: npm run dev -- --hostname 0.0.0.0 --port 3000
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: voice-weekly-planner-nginx
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
 
   # ollama:
   #   build:
