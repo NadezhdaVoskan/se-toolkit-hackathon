@@ -8,6 +8,7 @@ const mediaRecorderOptions = [
   { mimeType: "audio/ogg;codecs=opus", extension: "ogg" },
   { mimeType: "audio/mp4", extension: "m4a" },
 ] as const;
+const RECORDING_TIMESLICE_MS = 250;
 
 export function useAudioRecorder(filenamePrefix: string) {
   const [recordedFile, setRecordedFile] = useState<File | null>(null);
@@ -40,7 +41,13 @@ export function useAudioRecorder(filenamePrefix: string) {
 
     clearRecording();
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
     const preferredFormat = resolvePreferredRecordingFormat();
     const recorder = preferredFormat.mimeType
       ? new MediaRecorder(stream, { mimeType: preferredFormat.mimeType })
@@ -57,7 +64,8 @@ export function useAudioRecorder(filenamePrefix: string) {
     };
 
     recorder.onstop = () => {
-      const blobType = recorder.mimeType || preferredFormat.mimeType || "audio/webm";
+      const blobType =
+        chunksRef.current[0]?.type || recorder.mimeType || preferredFormat.mimeType || "audio/webm";
       const recordingBlob = new Blob(chunksRef.current, { type: blobType });
       const extension = preferredFormat.extension ?? "webm";
       const file = new File([recordingBlob], `${filenamePrefix}-${Date.now()}.${extension}`, {
@@ -78,7 +86,7 @@ export function useAudioRecorder(filenamePrefix: string) {
       setIsRecording(false);
     };
 
-    recorder.start();
+    recorder.start(RECORDING_TIMESLICE_MS);
     setIsRecording(true);
   }
 
@@ -86,6 +94,10 @@ export function useAudioRecorder(filenamePrefix: string) {
     const recorder = mediaRecorderRef.current;
     if (!recorder || recorder.state === "inactive") {
       return;
+    }
+
+    if (recorder.state === "recording") {
+      recorder.requestData();
     }
 
     recorder.stop();
