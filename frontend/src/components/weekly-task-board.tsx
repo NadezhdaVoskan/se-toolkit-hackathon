@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 
 import { SectionCard } from "@/components/section-card";
-import type { DayOfWeek, Task } from "@/types/task";
+import type { DayOfWeek, Task, TaskCreatePayload } from "@/types/task";
 
 type WeeklyTaskBoardProps = {
+  deletingTaskId: string | null;
+  onDeleteTask: (task: Task) => Promise<void>;
+  onEditTask: (task: Task, payload: TaskCreatePayload) => Promise<boolean>;
   tasks: Task[];
   updatingTaskId: string | null;
   onToggleTaskStatus: (task: Task) => Promise<void>;
@@ -31,11 +34,16 @@ const weekdayIndexMap: Record<DayOfWeek, number> = {
 };
 
 export function WeeklyTaskBoard({
+  deletingTaskId,
+  onDeleteTask,
+  onEditTask,
   tasks,
   updatingTaskId,
   onToggleTaskStatus,
 }: WeeklyTaskBoardProps) {
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = useState<TaskCreatePayload | null>(null);
 
   const referenceDate = new Date();
   const currentWeekStart = getStartOfWeek(referenceDate);
@@ -145,52 +153,178 @@ export function WeeklyTaskBoard({
                           : "border-white bg-white"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-2">
-                          <p
-                            className={`text-sm font-semibold leading-6 ${
-                              task.status === "done"
-                                ? "text-emerald-900 line-through decoration-2"
-                                : "text-slate-900"
-                            }`}
-                          >
-                            {task.title}
-                          </p>
-                          {task.description ? (
-                            <p className="text-sm leading-6 text-slate-500">{task.description}</p>
-                          ) : null}
-                          {task.due_date ? (
-                            <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
-                              {task.due_date}
-                            </p>
-                          ) : null}
+                      {editingTaskId === task.id && editingDraft ? (
+                        <div className="space-y-3">
+                          <input
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-emerald-500"
+                            onChange={(event) => {
+                              setEditingDraft((current) =>
+                                current
+                                  ? { ...current, title: event.target.value }
+                                  : current,
+                              );
+                            }}
+                            type="text"
+                            value={editingDraft.title}
+                          />
+                          <textarea
+                            className="min-h-20 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
+                            onChange={(event) => {
+                              setEditingDraft((current) =>
+                                current
+                                  ? { ...current, description: event.target.value || null }
+                                  : current,
+                              );
+                            }}
+                            value={editingDraft.description ?? ""}
+                          />
+                          <div className="grid gap-3">
+                            <select
+                              className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
+                              onChange={(event) => {
+                                setEditingDraft((current) =>
+                                  current
+                                    ? {
+                                        ...current,
+                                        day_of_week: (event.target.value || null) as DayOfWeek | null,
+                                      }
+                                    : current,
+                                );
+                              }}
+                              value={editingDraft.day_of_week ?? ""}
+                            >
+                              <option value="">No day</option>
+                              {weekdayOrder
+                                .filter((value): value is DayOfWeek => value !== "Unscheduled")
+                                .map((dayValue) => (
+                                  <option key={dayValue} value={dayValue}>
+                                    {dayValue}
+                                  </option>
+                                ))}
+                            </select>
+                            <input
+                              className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
+                              onChange={(event) => {
+                                setEditingDraft((current) =>
+                                  current
+                                    ? { ...current, due_date: event.target.value || null }
+                                    : current,
+                                );
+                              }}
+                              type="date"
+                              value={editingDraft.due_date ?? ""}
+                            />
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              className="rounded-xl bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+                              disabled={updatingTaskId === task.id || !editingDraft.title.trim()}
+                              onClick={() => {
+                                void onEditTask(task, editingDraft).then((wasSaved) => {
+                                  if (!wasSaved) {
+                                    return;
+                                  }
+
+                                  setEditingTaskId(null);
+                                  setEditingDraft(null);
+                                });
+                              }}
+                              type="button"
+                            >
+                              {updatingTaskId === task.id ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300"
+                              onClick={() => {
+                                setEditingTaskId(null);
+                                setEditingDraft(null);
+                              }}
+                              type="button"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-2">
+                              <p
+                                className={`text-sm font-semibold leading-6 ${
+                                  task.status === "done"
+                                    ? "text-emerald-900 line-through decoration-2"
+                                    : "text-slate-900"
+                                }`}
+                              >
+                                {task.title}
+                              </p>
+                              {task.description ? (
+                                <p className="text-sm leading-6 text-slate-500">{task.description}</p>
+                              ) : null}
+                              {task.due_date ? (
+                                <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+                                  {task.due_date}
+                                </p>
+                              ) : null}
+                            </div>
 
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                            task.status === "done"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {task.status}
-                        </span>
-                      </div>
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                                task.status === "done"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {task.status}
+                            </span>
+                          </div>
 
-                      <button
-                        className="mt-4 inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={updatingTaskId === task.id}
-                        onClick={() => {
-                          void onToggleTaskStatus(task);
-                        }}
-                        type="button"
-                      >
-                        {updatingTaskId === task.id
-                          ? "Saving..."
-                          : task.status === "done"
-                            ? "Mark as todo"
-                            : "Mark as done"}
-                      </button>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              disabled={updatingTaskId === task.id}
+                              onClick={() => {
+                                void onToggleTaskStatus(task);
+                              }}
+                              type="button"
+                            >
+                              {updatingTaskId === task.id
+                                ? "Saving..."
+                                : task.status === "done"
+                                  ? "Mark as todo"
+                                  : "Mark as done"}
+                            </button>
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300"
+                              onClick={() => {
+                                setEditingTaskId(task.id);
+                                setEditingDraft({
+                                  title: task.title,
+                                  description: task.description,
+                                  day_of_week: task.day_of_week,
+                                  due_date: task.due_date,
+                                  status: task.status,
+                                  source_voice_note_id: task.source_voice_note_id,
+                                });
+                              }}
+                              type="button"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3.5 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              disabled={deletingTaskId === task.id}
+                              onClick={() => {
+                                void onDeleteTask(task);
+                              }}
+                              type="button"
+                            >
+                              {deletingTaskId === task.id ? "Deleting..." : "Delete"}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </article>
                   ))
                 ) : (

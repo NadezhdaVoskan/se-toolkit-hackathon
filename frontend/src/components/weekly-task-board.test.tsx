@@ -15,9 +15,14 @@ describe("WeeklyTaskBoard", () => {
 
   it("groups tasks by weekday and renders the action button", () => {
     const onToggleTaskStatus = vi.fn().mockResolvedValue(undefined);
+    const onEditTask = vi.fn().mockResolvedValue(undefined);
+    const onDeleteTask = vi.fn().mockResolvedValue(undefined);
 
     render(
       <WeeklyTaskBoard
+        deletingTaskId={null}
+        onDeleteTask={onDeleteTask}
+        onEditTask={onEditTask}
         tasks={[
           {
             id: "task-1",
@@ -43,6 +48,8 @@ describe("WeeklyTaskBoard", () => {
     expect(screen.getByRole("button", { name: "Current Week" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next Week" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
     expect(onToggleTaskStatus).toHaveBeenCalledTimes(1);

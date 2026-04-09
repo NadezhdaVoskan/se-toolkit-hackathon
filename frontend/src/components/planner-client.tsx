@@ -10,6 +10,7 @@ import { WeeklyTaskBoard } from "@/components/weekly-task-board";
 import {
   confirmAudioNote,
   createTask,
+  deleteTask,
   fetchCurrentUser,
   fetchTasks,
   loginUser,
@@ -32,6 +33,7 @@ export function PlannerClient() {
   const [error, setError] = useState<string | null>(null);
   const [notePhase, setNotePhase] = useState<WorkflowPhase>("idle");
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [savingDetectedTasks, setSavingDetectedTasks] = useState(false);
   const [creatingManualTask, setCreatingManualTask] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
@@ -224,6 +226,59 @@ export function PlannerClient() {
       );
     } finally {
       setUpdatingTaskId(null);
+    }
+  }
+
+  async function saveTaskEdits(task: Task, payload: TaskCreatePayload): Promise<boolean> {
+    if (!authToken) {
+      setError("Please sign in to update tasks.");
+      return false;
+    }
+
+    setUpdatingTaskId(task.id);
+    setError(null);
+
+    try {
+      await updateTask(
+        task.id,
+        {
+          title: payload.title.trim(),
+          description: payload.description?.trim() || null,
+          day_of_week: payload.day_of_week,
+          due_date: payload.due_date,
+        },
+        authToken,
+      );
+      await refreshTasks("Could not refresh tasks after editing a task.", authToken);
+      return true;
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error ? updateError.message : "Could not save task changes.",
+      );
+      return false;
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  }
+
+  async function removeTask(task: Task) {
+    if (!authToken) {
+      setError("Please sign in to delete tasks.");
+      return;
+    }
+
+    setDeletingTaskId(task.id);
+    setError(null);
+
+    try {
+      await deleteTask(task.id, authToken);
+      await refreshTasks("Could not refresh tasks after deleting a task.", authToken);
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error ? deleteError.message : "Could not delete the task.",
+      );
+    } finally {
+      setDeletingTaskId(null);
     }
   }
 
@@ -476,6 +531,9 @@ export function PlannerClient() {
       />
 
       <WeeklyTaskBoard
+        deletingTaskId={deletingTaskId}
+        onDeleteTask={removeTask}
+        onEditTask={saveTaskEdits}
         tasks={tasks}
         updatingTaskId={updatingTaskId}
         onToggleTaskStatus={toggleTaskStatus}

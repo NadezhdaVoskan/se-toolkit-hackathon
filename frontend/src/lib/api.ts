@@ -99,6 +99,21 @@ export async function updateTask(
   }, "Task update failed.", token);
 }
 
+export async function deleteTask(taskId: string, token: string): Promise<void> {
+  const headers = new Headers();
+  headers.set("Authorization", `Bearer ${token}`);
+
+  const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
+    method: "DELETE",
+    headers,
+  });
+
+  if (!response.ok) {
+    const errorMessage = await readErrorMessage(response, "Task deletion failed.");
+    throw new Error(errorMessage);
+  }
+}
+
 async function apiRequest<T>(
   path: string,
   init: RequestInit,
