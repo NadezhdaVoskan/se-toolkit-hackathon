@@ -214,6 +214,7 @@ export function WeeklyTaskBoard({
                             value={editingDraft.description ?? ""}
                           />
                           <EnglishDateInput
+                            calendarPlacement="top"
                             className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
                             onChange={(value) => {
                               setEditingDraft((current) =>

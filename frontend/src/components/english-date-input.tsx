@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type EnglishDateInputProps = {
+  calendarPlacement?: "bottom" | "top";
   className?: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -10,6 +11,7 @@ type EnglishDateInputProps = {
 const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 export function EnglishDateInput({
+  calendarPlacement = "bottom",
   className,
   onChange,
   placeholder = "MM/DD/YYYY",
@@ -143,7 +145,13 @@ export function EnglishDateInput({
       </div>
 
       {isCalendarOpen ? (
-        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-20 w-[18rem] rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)]">
+        <div
+          className={`absolute left-0 z-20 w-[18rem] rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] ${
+            calendarPlacement === "top"
+              ? "bottom-[calc(100%+0.5rem)]"
+              : "top-[calc(100%+0.5rem)]"
+          }`}
+        >
           <div className="mb-4 flex items-center justify-between gap-3">
             <button
               className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"

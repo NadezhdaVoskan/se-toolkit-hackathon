@@ -71,6 +71,7 @@ export function ManualTaskCreator({ isSaving, onCreate }: ManualTaskCreatorProps
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Date
           <EnglishDateInput
+            calendarPlacement="top"
             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
             onChange={(value) => {
               setFormState((current) => ({
