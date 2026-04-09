@@ -3,11 +3,12 @@
 Turn voice notes into private weekly tasks with manual editing, scheduling, and simple weekly planning.
 
 ## Demo
+<img width="1668" height="908" alt="image" src="https://github.com/user-attachments/assets/775991bc-9603-468e-9b70-29bed165d99f" />
+<img width="1576" height="917" alt="image" src="https://github.com/user-attachments/assets/8027b812-476a-4650-91ab-3f42d6ea2d63" />
+<img width="1640" height="889" alt="image" src="https://github.com/user-attachments/assets/6aec4bce-5b5c-4090-bc78-2ad697bcd78c" />
 
-Add 2 product screenshots here before submission:
+<img width="1604" height="925" alt="image" src="https://github.com/user-attachments/assets/b74e72c2-7c2d-421c-9f62-2ba808232f24" />
 
-- Main screen with `Voice Note Recorder`, `Transcription Result`, and `Weekly Tasks`
-- Weekly board or manual task creation flow
 
 ## Product Context
 
@@ -84,7 +85,7 @@ Optional but useful:
 1. Clone the repository on the VM.
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/NadezhdaVoskan/se-toolkit-hackathon
 cd SpeakPlan
 ```
 
