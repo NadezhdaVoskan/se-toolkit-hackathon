@@ -233,7 +233,7 @@ export function PlannerClient() {
               Voice Weekly Planner
             </p>
             <h1 className="text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">
-              Keep every user&apos;s plans private and organized.
+              Sign in to keep your voice notes and tasks in one place.
             </h1>
             <p className="max-w-2xl text-base leading-7 text-slate-600">
               Sign in or create an account to upload voice notes and keep your tasks
