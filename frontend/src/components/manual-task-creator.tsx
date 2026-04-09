@@ -13,6 +13,7 @@ const initialFormState: TaskCreatePayload = {
   description: "",
   day_of_week: null,
   due_date: null,
+  recurrence: "none",
   status: "todo",
   source_voice_note_id: null,
 };
@@ -26,6 +27,7 @@ export function ManualTaskCreator({ isSaving, onCreate }: ManualTaskCreatorProps
       title: formState.title.trim(),
       description: formState.description?.trim() || null,
       day_of_week: null,
+      recurrence: formState.recurrence ?? "none",
       source_voice_note_id: null,
       status: "todo",
     });
@@ -79,6 +81,28 @@ export function ManualTaskCreator({ isSaving, onCreate }: ManualTaskCreatorProps
             value={formState.due_date ?? ""}
           />
         </label>
+
+        <details className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+            Task settings
+          </summary>
+          <label className="mt-3 flex items-start gap-3 text-sm text-slate-600">
+            <input
+              checked={(formState.recurrence ?? "none") === "weekly"}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              onChange={(event) => {
+                setFormState((current) => ({
+                  ...current,
+                  recurrence: event.target.checked ? "weekly" : "none",
+                }));
+              }}
+              type="checkbox"
+            />
+            <span>
+              Repeat every week
+            </span>
+          </label>
+        </details>
 
         <button
           className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"

@@ -192,6 +192,7 @@ export function PlannerClient() {
           description: task.description ?? null,
           day_of_week: null,
           due_date: task.due_date ?? null,
+          recurrence: task.recurrence ?? "none",
           status: task.status ?? "todo",
           source_voice_note_id: task.source_voice_note_id ?? null,
         })),
@@ -246,6 +247,7 @@ export function PlannerClient() {
           description: payload.description?.trim() || null,
           day_of_week: null,
           due_date: payload.due_date,
+          recurrence: payload.recurrence ?? "none",
         },
         authToken,
       );
@@ -320,6 +322,7 @@ export function PlannerClient() {
         description: task.description?.trim() || null,
         day_of_week: null,
         due_date: task.due_date,
+        recurrence: task.recurrence ?? "none",
         status: "todo" as const,
         source_voice_note_id: null,
       }))
@@ -344,6 +347,7 @@ export function PlannerClient() {
           description: task.description,
           day_of_week: null,
           due_date: task.due_date,
+          recurrence: task.recurrence ?? "none",
           status: task.status,
           source_voice_note_id: task.source_voice_note_id,
         })),

@@ -14,6 +14,7 @@ DayOfWeek = Literal[
 ]
 
 TaskStatus = Literal["todo", "done"]
+TaskRecurrence = Literal["none", "weekly"]
 
 
 class TaskCreate(BaseModel):
@@ -21,6 +22,7 @@ class TaskCreate(BaseModel):
     description: str | None = None
     day_of_week: DayOfWeek | None = None
     due_date: date | None = None
+    recurrence: TaskRecurrence = "none"
     status: TaskStatus = "todo"
     source_voice_note_id: str | None = None
 
@@ -30,6 +32,7 @@ class TaskUpdate(BaseModel):
     description: str | None = None
     day_of_week: DayOfWeek | None = None
     due_date: date | None = None
+    recurrence: TaskRecurrence | None = None
     status: TaskStatus | None = None
 
 

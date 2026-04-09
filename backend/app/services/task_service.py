@@ -52,8 +52,14 @@ def update_task(db: Session, task_id: str, payload: TaskUpdate, user_id: str) ->
         return None
 
     normalized_fields = normalize_task_update_payload(payload, record)
+    should_spawn_recurring_task = should_create_recurring_successor(record, normalized_fields)
     for field, value in normalized_fields.items():
         setattr(record, field, value)
+
+    if should_spawn_recurring_task:
+        next_task = build_recurring_successor(record, normalized_fields)
+        if next_task is not None and not has_matching_recurring_successor(db, record, next_task):
+            db.add(next_task)
 
     db.add(record)
     db.commit()
@@ -134,6 +140,47 @@ def normalize_task_update_payload(payload: TaskUpdate, record: Task) -> dict:
         normalized_fields["due_date"] = resolve_next_due_date(next_day_of_week)
 
     return normalized_fields
+
+
+def should_create_recurring_successor(record: Task, normalized_fields: dict) -> bool:
+    next_status = normalized_fields.get("status", record.status)
+    next_recurrence = normalized_fields.get("recurrence", record.recurrence)
+    return record.status != "done" and next_status == "done" and next_recurrence == "weekly"
+
+
+def build_recurring_successor(record: Task, normalized_fields: dict) -> Task | None:
+    next_due_date = normalized_fields.get("due_date", record.due_date) or date.today()
+    recurrence = normalized_fields.get("recurrence", record.recurrence)
+    if recurrence != "weekly":
+        return None
+
+    return Task(
+        title=normalized_fields.get("title", record.title),
+        description=normalized_fields.get("description", record.description),
+        day_of_week=None,
+        due_date=next_due_date + timedelta(days=7),
+        recurrence=recurrence,
+        status="todo",
+        source_voice_note_id=record.source_voice_note_id,
+        user_id=record.user_id,
+    )
+
+
+def has_matching_recurring_successor(db: Session, record: Task, next_task: Task) -> bool:
+    description_clause = (
+        Task.description.is_(None)
+        if next_task.description is None
+        else Task.description == next_task.description
+    )
+    statement = select(Task).where(
+        Task.user_id == record.user_id,
+        Task.title == next_task.title,
+        description_clause,
+        Task.due_date == next_task.due_date,
+        Task.recurrence == next_task.recurrence,
+        Task.status == "todo",
+    )
+    return db.scalars(statement).first() is not None
 
 
 def resolve_next_due_date(day_of_week: DayOfWeek) -> date:

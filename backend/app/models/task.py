@@ -23,6 +23,7 @@ class Task(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     day_of_week: Mapped[str | None] = mapped_column(String(32), nullable=True)
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    recurrence: Mapped[str] = mapped_column(String(16), default="none", nullable=False)
     status: Mapped[str] = mapped_column(String(16), default="todo", nullable=False)
     source_voice_note_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("voice_notes.id", ondelete="SET NULL"), nullable=True

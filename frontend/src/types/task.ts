@@ -7,12 +7,15 @@ export type DayOfWeek =
   | "Saturday"
   | "Sunday";
 
+export type TaskRecurrence = "none" | "weekly";
+
 export type Task = {
   id: string;
   title: string;
   description: string | null;
   day_of_week: DayOfWeek | null;
   due_date: string | null;
+  recurrence: TaskRecurrence;
   status: "todo" | "done";
   source_voice_note_id: string | null;
   created_at: string;
@@ -25,6 +28,7 @@ export type TaskDraft = {
   description: string | null;
   day_of_week: DayOfWeek | null;
   due_date: string | null;
+  recurrence: TaskRecurrence;
   status: "todo" | "done";
   source_voice_note_id: string | null;
 };
@@ -34,6 +38,7 @@ export type TaskCreatePayload = {
   description: string | null;
   day_of_week: DayOfWeek | null;
   due_date: string | null;
+  recurrence?: TaskRecurrence;
   status?: "todo" | "done";
   source_voice_note_id?: string | null;
 };
@@ -43,6 +48,7 @@ export type TaskUpdatePayload = {
   description?: string | null;
   day_of_week?: DayOfWeek | null;
   due_date?: string | null;
+  recurrence?: TaskRecurrence;
   status?: "todo" | "done";
 };
 

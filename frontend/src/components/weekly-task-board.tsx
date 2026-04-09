@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { SectionCard } from "@/components/section-card";
 import type { DayOfWeek, Task, TaskCreatePayload } from "@/types/task";
 
+type TaskStatusFilter = "all" | "todo" | "done";
+
 type WeeklyTaskBoardProps = {
   deletingTaskId: string | null;
   onDeleteTask: (task: Task) => Promise<void>;
@@ -44,17 +46,20 @@ export function WeeklyTaskBoard({
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<TaskCreatePayload | null>(null);
+  const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>("all");
 
   const referenceDate = new Date();
   const currentWeekStart = getStartOfWeek(referenceDate);
   const selectedWeekStart = addDays(currentWeekStart, selectedWeekOffset * 7);
   const selectedWeekEnd = addDays(selectedWeekStart, 6);
   const weekLabel = formatWeekRange(selectedWeekStart, selectedWeekEnd);
+  const visibleTasks =
+    statusFilter === "all" ? tasks : tasks.filter((task) => task.status === statusFilter);
 
   const groups = weekdayOrder.map((day) => ({
     day,
     date: day === "Unscheduled" ? null : addDays(selectedWeekStart, weekdayIndexMap[day]),
-    items: tasks.filter((task) =>
+    items: visibleTasks.filter((task) =>
       belongsToGroup(task, day, selectedWeekStart, selectedWeekEnd, selectedWeekOffset),
     ),
   }));
@@ -118,6 +123,32 @@ export function WeeklyTaskBoard({
               Today
             </button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {(["all", "todo", "done"] as const).map((filterValue) => (
+            <button
+              key={filterValue}
+              className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+                statusFilter === filterValue
+                  ? "bg-slate-900 text-white"
+                  : "border border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+              }`}
+              onClick={() => {
+                setStatusFilter(filterValue);
+              }}
+              type="button"
+            >
+              {filterValue === "all"
+                ? "All"
+                : filterValue === "todo"
+                  ? "Todo"
+                  : "Done"}
+            </button>
+          ))}
+          <span className="text-sm text-slate-500">
+            Showing {visibleTasks.length} of {tasks.length} tasks
+          </span>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -195,6 +226,30 @@ export function WeeklyTaskBoard({
                             value={editingDraft.due_date ?? ""}
                           />
 
+                          <details className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+                            <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+                              Task settings
+                            </summary>
+                            <label className="mt-3 flex items-start gap-3 text-sm text-slate-600">
+                              <input
+                                checked={(editingDraft.recurrence ?? "none") === "weekly"}
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                onChange={(event) => {
+                                  setEditingDraft((current) =>
+                                    current
+                                      ? {
+                                          ...current,
+                                          recurrence: event.target.checked ? "weekly" : "none",
+                                        }
+                                      : current,
+                                  );
+                                }}
+                                type="checkbox"
+                              />
+                              <span>Repeat every week</span>
+                            </label>
+                          </details>
+
                           <div className="flex flex-wrap gap-2">
                             <button
                               className="rounded-xl bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
@@ -246,6 +301,11 @@ export function WeeklyTaskBoard({
                                   {formatTaskDueDate(task.due_date)}
                                 </p>
                               ) : null}
+                              {task.recurrence === "weekly" ? (
+                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                                  Repeats weekly
+                                </p>
+                              ) : null}
                             </div>
 
                             <span
@@ -283,6 +343,7 @@ export function WeeklyTaskBoard({
                                   description: task.description,
                                   day_of_week: null,
                                   due_date: task.due_date,
+                                  recurrence: task.recurrence,
                                   status: task.status,
                                   source_voice_note_id: task.source_voice_note_id,
                                 });
