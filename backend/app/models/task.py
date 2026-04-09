@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.user import User
     from app.models.voice_note import VoiceNote
 
 
@@ -24,6 +25,9 @@ class Task(Base):
     source_voice_note_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("voice_notes.id", ondelete="SET NULL"), nullable=True
     )
+    user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -38,3 +42,4 @@ class Task(Base):
         "VoiceNote",
         back_populates="tasks",
     )
+    user: Mapped["User | None"] = relationship("User", back_populates="tasks")

@@ -8,8 +8,6 @@ from pydantic import BaseModel, ValidationError
 from app.core.config import settings
 from app.schemas.task import DayOfWeek, TaskCreate
 
-from ollama import Client
-
 TASK_EXTRACTION_PROMPT_TEMPLATE = """You are an assistant that extracts weekly planner tasks from a speech transcription.
 
 Return only valid JSON.
@@ -138,6 +136,13 @@ class RealLLMTaskExtractionService:
 
 class LocalLLMTaskExtractionService:
     def __init__(self, model: str = "qwen3:4b", api_url: str | None = None) -> None:
+        try:
+            from ollama import Client
+        except ImportError as exc:
+            raise RuntimeError(
+                "Local task extraction requires the 'ollama' package to be installed."
+            ) from exc
+
         self.client = Client(host=api_url)
         self.model = model
 

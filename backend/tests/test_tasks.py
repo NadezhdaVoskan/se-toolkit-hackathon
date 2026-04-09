@@ -1,4 +1,6 @@
-def test_create_task(client):
+def test_create_task(client, auth_headers):
+    headers = auth_headers()
+
     response = client.post(
         "/api/tasks",
         json={
@@ -7,6 +9,7 @@ def test_create_task(client):
             "day_of_week": "Monday",
             "status": "todo",
         },
+        headers=headers,
     )
 
     assert response.status_code == 201
@@ -18,7 +21,9 @@ def test_create_task(client):
     assert payload["id"]
 
 
-def test_update_task_status(client):
+def test_update_task_status(client, auth_headers):
+    headers = auth_headers()
+
     create_response = client.post(
         "/api/tasks",
         json={
@@ -27,12 +32,14 @@ def test_update_task_status(client):
             "day_of_week": "Wednesday",
             "status": "todo",
         },
+        headers=headers,
     )
     task_id = create_response.json()["id"]
 
     update_response = client.patch(
         f"/api/tasks/{task_id}",
         json={"status": "done"},
+        headers=headers,
     )
 
     assert update_response.status_code == 200

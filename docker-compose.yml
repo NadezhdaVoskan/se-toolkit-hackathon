@@ -30,6 +30,8 @@ services:
       API_PREFIX: ${API_PREFIX:-/api}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-planner}:${POSTGRES_PASSWORD:-planner}@db:5432/${POSTGRES_DB:-voice_weekly_planner}
       ALLOWED_ORIGINS: http://localhost:${FRONTEND_PORT:-3000}
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:-change-me-in-production}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
       TRANSCRIPTION_PROVIDER: ${TRANSCRIPTION_PROVIDER:-auto}
       WHISPER_API_KEY: ${WHISPER_API_KEY:-}
       WHISPER_MODEL: ${WHISPER_MODEL:-whisper-1}

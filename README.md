@@ -9,6 +9,7 @@ The project is built as a small monorepo with a Next.js frontend, a FastAPI back
 The application focuses on one main flow:
 
 - Record or upload a spoken planning note, transcribe it, extract tasks, and show them in a weekly task list.
+- Register or sign in so each user sees only their own tasks and uploaded voice notes.
 
 Example planning note:
 
@@ -94,6 +95,8 @@ For planning notes:
 - Extract weekly tasks from the transcription
 - Save tasks in PostgreSQL
 - Display tasks grouped by weekday
+- Register and log in with email and password
+- Keep tasks and uploaded voice notes isolated per user
 - Manually mark tasks as done from the UI
 
 ## Setup
@@ -126,6 +129,8 @@ Used by Docker Compose.
 | `BACKEND_PORT` | Host port for FastAPI | `8000` |
 | `FRONTEND_PORT` | Host port for Next.js | `3000` |
 | `NEXT_PUBLIC_API_BASE_URL` | Frontend URL for backend API | `http://localhost:8000` |
+| `AUTH_SECRET_KEY` | Secret used to sign access tokens | `change-me-in-production` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime in minutes | `10080` |
 | `TRANSCRIPTION_PROVIDER` | Speech-to-text provider mode | `local`, `auto`, or `mock` |
 | `WHISPER_API_KEY` | OpenAI API key for real transcription | `your_openai_api_key` |
 | `WHISPER_MODEL` | Whisper model name | `whisper-1` |
@@ -150,6 +155,8 @@ Used when running the backend directly without Docker.
 | `API_PREFIX` | Base API prefix |
 | `DATABASE_URL` | SQLAlchemy database connection string |
 | `ALLOWED_ORIGINS` | Allowed CORS origins |
+| `AUTH_SECRET_KEY` | Secret used to sign access tokens |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime in minutes |
 | `TRANSCRIPTION_PROVIDER` | Speech-to-text provider selection |
 | `WHISPER_API_KEY` | OpenAI API key for real transcription |
 | `WHISPER_MODEL` | Whisper model name |
@@ -324,11 +331,19 @@ npm run dev
 ### Planning note flow
 
 1. Open the frontend.
-2. Record a spoken planning note.
-3. Stop recording and upload the audio.
-4. Review the transcription result.
-5. Review the extracted weekly tasks.
-6. Mark tasks as done manually if needed.
+2. Register a new account or sign in.
+3. Record a spoken planning note.
+4. Stop recording and upload the audio.
+5. Review the transcription result.
+6. Review the extracted weekly tasks.
+7. Mark tasks as done manually if needed.
+
+### Authentication flow
+
+1. Open the frontend.
+2. Use the registration form to create an account with email and password.
+3. Sign in to restore your own task list.
+4. Upload voice notes and manage only your own extracted tasks.
 
 ## API Endpoint Documentation
 
@@ -339,13 +354,24 @@ Base URL: `/api`
 - `GET /api/health`
   Returns API health status.
 
+### Auth
+
+- `POST /api/auth/register`
+  Creates a new user and returns a bearer access token.
+
+- `POST /api/auth/login`
+  Authenticates an existing user and returns a bearer access token.
+
+- `GET /api/auth/me`
+  Returns the currently authenticated user.
+
 ### Tasks
 
 - `GET /api/tasks`
-  Returns all tasks ordered by newest first.
+  Returns the authenticated user’s tasks ordered by newest first.
 
 - `POST /api/tasks`
-  Creates a task manually.
+  Creates a task manually for the authenticated user.
 
   Example request body:
 
@@ -359,15 +385,15 @@ Base URL: `/api`
 ```
 
 - `PATCH /api/tasks/{id}`
-  Updates selected task fields such as `status` or `day_of_week`.
+  Updates selected task fields such as `status` or `day_of_week` for the authenticated user’s task.
 
 - `DELETE /api/tasks/{id}`
-  Deletes a task.
+  Deletes the authenticated user’s task.
 
 ### Voice notes
 
 - `POST /api/voice-notes/upload`
-  Uploads a planning note audio file, stores transcription text, extracts tasks, and returns the created voice note with extracted tasks.
+  Uploads a planning note audio file for the authenticated user, stores transcription text, extracts tasks, and returns the created voice note with extracted tasks.
 
 ## Testing
 
@@ -377,6 +403,8 @@ The project includes lightweight tests for the critical flow.
 
 Covered cases:
 
+- auth register/login flow
+- per-user task isolation
 - task creation
 - task status update
 - voice note upload endpoint
@@ -423,14 +451,12 @@ For a simple server deployment later, the same containers can be reused with dif
 - Local transcription depends on `faster-whisper` and FFmpeg being installed on the machine running the backend.
 - OpenAI API transcription depends on a valid `WHISPER_API_KEY` and external OpenAI API availability.
 - LLM-based task extraction is still a placeholder and is not yet connected to a real API.
-- There is no authentication or per-user data separation.
-- The project is designed for a single-user demo scenario.
+- Password reset, email verification, and refresh tokens are not implemented yet.
 
 ## Future Improvements
 
 - Add automated tests for both local faster-whisper transcription and OpenAI API transcription.
 - Integrate a real LLM for task extraction.
-- Add user authentication and user-specific task lists.
 - Add more automated tests, especially end-to-end frontend tests.
 - Add better task metadata such as due time, priority, and categories.
 

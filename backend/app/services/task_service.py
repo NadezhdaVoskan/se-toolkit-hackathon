@@ -7,25 +7,26 @@ from app.models.task import Task
 from app.schemas.task import TaskCreate, TaskUpdate
 
 
-def list_tasks(db: Session) -> list[Task]:
-    statement = select(Task).order_by(Task.created_at.desc())
+def list_tasks(db: Session, user_id: str) -> list[Task]:
+    statement = select(Task).where(Task.user_id == user_id).order_by(Task.created_at.desc())
     return list(db.scalars(statement))
 
 
-def get_task(db: Session, task_id: str) -> Task | None:
-    return db.get(Task, task_id)
+def get_task(db: Session, task_id: str, user_id: str) -> Task | None:
+    statement = select(Task).where(Task.id == task_id, Task.user_id == user_id)
+    return db.scalars(statement).first()
 
 
-def create_task(db: Session, payload: TaskCreate) -> Task:
-    record = Task(**payload.model_dump())
+def create_task(db: Session, payload: TaskCreate, user_id: str) -> Task:
+    record = Task(**payload.model_dump(), user_id=user_id)
     db.add(record)
     db.commit()
     db.refresh(record)
     return record
 
 
-def create_tasks(db: Session, payloads: list[TaskCreate]) -> list[Task]:
-    records = [Task(**payload.model_dump()) for payload in payloads]
+def create_tasks(db: Session, payloads: list[TaskCreate], user_id: str) -> list[Task]:
+    records = [Task(**payload.model_dump(), user_id=user_id) for payload in payloads]
     db.add_all(records)
     db.commit()
     for record in records:
@@ -33,8 +34,8 @@ def create_tasks(db: Session, payloads: list[TaskCreate]) -> list[Task]:
     return records
 
 
-def update_task(db: Session, task_id: str, payload: TaskUpdate) -> Task | None:
-    record = get_task(db, task_id)
+def update_task(db: Session, task_id: str, payload: TaskUpdate, user_id: str) -> Task | None:
+    record = get_task(db, task_id, user_id)
     if record is None:
         return None
 
@@ -55,6 +56,7 @@ def delete_task(db: Session, task: Task) -> None:
 def find_matching_task(
     db: Session,
     query: str,
+    user_id: str,
     *,
     prefer_todo: bool = False,
 ) -> Task | None:
@@ -62,7 +64,7 @@ def find_matching_task(
     if not normalized_query:
         return None
 
-    tasks = list_tasks(db)
+    tasks = list_tasks(db, user_id)
     best_task: Task | None = None
     best_score = 0.0
 

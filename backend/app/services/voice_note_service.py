@@ -12,7 +12,9 @@ from app.services.transcription import TranscriptionServiceError, get_transcript
 
 
 async def create_voice_note_from_upload(
-    db: Session, upload: UploadFile
+    db: Session,
+    upload: UploadFile,
+    user_id: str,
 ) -> VoiceNoteUploadResponse:
     validate_audio_upload(upload)
     temp_file_path = save_upload_to_temporary_file(upload)
@@ -50,6 +52,7 @@ async def create_voice_note_from_upload(
         voice_note = VoiceNote(
             original_filename=upload.filename or "uploaded-audio",
             transcription_text=transcript,
+            user_id=user_id,
         )
 
         db.add(voice_note)
@@ -60,7 +63,7 @@ async def create_voice_note_from_upload(
             task.model_copy(update={"source_voice_note_id": voice_note.id})
             for task in extracted_tasks
         ]
-        created_tasks = create_tasks(db, linked_tasks) if linked_tasks else []
+        created_tasks = create_tasks(db, linked_tasks, user_id) if linked_tasks else []
     except SQLAlchemyError as exc:
         db.rollback()
         raise HTTPException(

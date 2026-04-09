@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     database_url: str = "postgresql+psycopg://planner:planner@localhost:5432/voice_weekly_planner"
     allowed_origins: str = Field(default="http://localhost:3000")
+    auth_secret_key: str = "change-me-in-production"
+    access_token_expire_minutes: int = 10080
     transcription_provider: str = "local"
     whisper_api_key: str | None = None
     whisper_model: str = "whisper-1"

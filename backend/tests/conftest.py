@@ -41,3 +41,23 @@ def client() -> Generator[TestClient, None, None]:
 
     app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture()
+def auth_headers(client: TestClient):
+    def build_headers(
+        email: str = "alice@example.com",
+        password: str = "password123",
+    ) -> dict[str, str]:
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "email": email,
+                "password": password,
+            },
+        )
+        assert response.status_code == 201
+        access_token = response.json()["access_token"]
+        return {"Authorization": f"Bearer {access_token}"}
+
+    return build_headers
