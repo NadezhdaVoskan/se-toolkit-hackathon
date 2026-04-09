@@ -25,6 +25,11 @@ export function ProcessTracker({ phase, hasRecording }: ProcessTrackerProps) {
             <p className="text-xs leading-5 text-slate-500">
               The app will move through upload, transcription, and task extraction automatically.
             </p>
+            {(phase === "uploading" || phase === "transcribing" || phase === "extracting") ? (
+              <p className="mt-1 text-xs font-semibold text-emerald-700">
+                This can take 10-20 seconds.
+              </p>
+            ) : null}
           </div>
           <span className="shrink-0 text-sm font-semibold text-emerald-700">
             {progressValue}%
@@ -33,7 +38,7 @@ export function ProcessTracker({ phase, hasRecording }: ProcessTrackerProps) {
 
         <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/90">
           <div
-            className="h-full rounded-full bg-[linear-gradient(90deg,#10b981,#34d399,#6ee7b7)] transition-[width] duration-700 ease-out"
+            className="h-full rounded-full bg-[linear-gradient(90deg,#10b981,#34d399,#6ee7b7,#34d399)] bg-[length:200%_100%] transition-[width] duration-700 ease-out motion-safe:animate-pulse"
             style={{ width: `${progressValue}%` }}
           />
         </div>

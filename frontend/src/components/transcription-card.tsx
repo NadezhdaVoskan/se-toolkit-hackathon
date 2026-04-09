@@ -1,15 +1,28 @@
 import type { ReactNode } from "react";
-import type { Task } from "@/types/task";
+import type { Task, TaskDraft } from "@/types/task";
 import { SectionCard } from "@/components/section-card";
+import { TaskDraftEditor } from "@/components/task-draft-editor";
 
 type TranscriptionCardProps = {
   transcriptionText: string;
-  detectedTasks: Task[];
+  detectedTasks: TaskDraft[];
+  isSavingDetectedTasks: boolean;
+  onDeleteDetectedTask: (taskId: string) => void;
+  onDetectedTaskFieldChange: (
+    taskId: string,
+    field: "title" | "description" | "day_of_week" | "due_date",
+    value: string,
+  ) => void;
+  onSaveDetectedTasks: () => Promise<void>;
 };
 
 export function TranscriptionCard({
   transcriptionText,
   detectedTasks,
+  isSavingDetectedTasks,
+  onDeleteDetectedTask,
+  onDetectedTaskFieldChange,
+  onSaveDetectedTasks,
 }: TranscriptionCardProps) {
   const transcriptionLines = buildTranscriptionLines(transcriptionText);
 
@@ -39,7 +52,7 @@ export function TranscriptionCard({
                     Detected Tasks From This Note
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
-                    Tasks extracted from the transcription and saved by the backend.
+                    Review, edit, or remove tasks before saving them to your board.
                   </p>
                 </div>
                 <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
@@ -47,41 +60,13 @@ export function TranscriptionCard({
                 </div>
               </div>
 
-              {detectedTasks.length > 0 ? (
-                <div className="mt-4 space-y-3">
-                  {detectedTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{task.title}</p>
-                          {task.description ? (
-                            <p className="mt-1 text-sm leading-6 text-slate-600">
-                              {task.description}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs font-medium">
-                          {task.day_of_week ? (
-                            <span className="rounded-full bg-sky-100 px-2.5 py-1 text-sky-700">
-                              {task.day_of_week}
-                            </span>
-                          ) : null}
-                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-700">
-                            {task.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-4 text-sm leading-6 text-slate-500">
-                  No clear tasks were detected from this note yet.
-                </p>
-              )}
+              <TaskDraftEditor
+                drafts={detectedTasks}
+                isSaving={isSavingDetectedTasks}
+                onDelete={onDeleteDetectedTask}
+                onFieldChange={onDetectedTaskFieldChange}
+                onSave={onSaveDetectedTasks}
+              />
             </div>
           </>
         ) : (
@@ -115,7 +100,7 @@ function buildTranscriptionLines(transcriptionText: string): string[] {
     .filter(Boolean);
 }
 
-function renderHighlightedLine(line: string, tasks: Task[]) {
+function renderHighlightedLine(line: string, tasks: Array<Pick<TaskDraft, "title" | "description">>) {
   const highlightPhrases = tasks
     .flatMap((task) => [task.title, task.description ?? ""])
     .map((phrase) => phrase.trim())

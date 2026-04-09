@@ -4,30 +4,36 @@ import { useEffect, useState } from "react";
 
 import { AudioRecorderCard } from "@/components/audio-recorder-card";
 import { AuthPanel } from "@/components/auth-panel";
+import { ManualTaskCreator } from "@/components/manual-task-creator";
 import { TranscriptionCard } from "@/components/transcription-card";
 import { WeeklyTaskBoard } from "@/components/weekly-task-board";
 import {
+  confirmAudioNote,
+  createTask,
   fetchCurrentUser,
   fetchTasks,
   loginUser,
+  processAudioNote,
   registerUser,
   updateTask,
-  uploadAudioNote,
 } from "@/lib/api";
 import { useAudioRecorder } from "@/lib/use-audio-recorder";
 import type { AuthMode, User } from "@/types/auth";
-import type { Task } from "@/types/task";
+import type { Task, TaskCreatePayload, TaskDraft } from "@/types/task";
 import type { WorkflowPhase } from "@/types/workflow";
 
 const AUTH_TOKEN_STORAGE_KEY = "speakplan.auth.token";
 
 export function PlannerClient() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [detectedTasks, setDetectedTasks] = useState<Task[]>([]);
+  const [detectedTasks, setDetectedTasks] = useState<TaskDraft[]>([]);
   const [transcriptionText, setTranscriptionText] = useState("");
+  const [processedFilename, setProcessedFilename] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notePhase, setNotePhase] = useState<WorkflowPhase>("idle");
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [savingDetectedTasks, setSavingDetectedTasks] = useState(false);
+  const [creatingManualTask, setCreatingManualTask] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -90,6 +96,7 @@ export function PlannerClient() {
     setTasks([]);
     setDetectedTasks([]);
     setTranscriptionText("");
+    setProcessedFilename("");
     noteRecorder.clearRecording();
   }
 
@@ -166,16 +173,28 @@ export function PlannerClient() {
     }
 
     setError(null);
+    setDetectedTasks([]);
+    setTranscriptionText("");
+    setProcessedFilename("");
     setNotePhase("uploading");
     const clearPhaseTimers = startProcessingPhaseTimers(setNotePhase);
 
     try {
-      const uploadResult = await uploadAudioNote(noteRecorder.recordedFile, authToken);
+      const uploadResult = await processAudioNote(noteRecorder.recordedFile, authToken);
+      setProcessedFilename(uploadResult.original_filename);
       setTranscriptionText(uploadResult.transcription_text);
-      setDetectedTasks(uploadResult.extracted_tasks);
-      await refreshTasks("Could not refresh tasks after upload.", authToken);
-      noteRecorder.clearRecording();
-      setNotePhase("done");
+      setDetectedTasks(
+        uploadResult.extracted_tasks.map((task, index) => ({
+          id: `draft-${Date.now()}-${index}`,
+          title: task.title,
+          description: task.description ?? null,
+          day_of_week: task.day_of_week ?? null,
+          due_date: task.due_date ?? null,
+          status: task.status ?? "todo",
+          source_voice_note_id: task.source_voice_note_id ?? null,
+        })),
+      );
+      setNotePhase("idle");
     } catch (uploadError) {
       setNotePhase("idle");
       setError(
@@ -205,6 +224,108 @@ export function PlannerClient() {
       );
     } finally {
       setUpdatingTaskId(null);
+    }
+  }
+
+  function updateDetectedTaskField(
+    taskId: string,
+    field: "title" | "description" | "day_of_week" | "due_date",
+    value: string,
+  ) {
+    setDetectedTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              [field]:
+                field === "day_of_week" || field === "due_date"
+                  ? value || null
+                  : value,
+            }
+          : task,
+      ),
+    );
+  }
+
+  function deleteDetectedTask(taskId: string) {
+    setDetectedTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
+  }
+
+  async function saveDetectedTasks() {
+    if (!authToken) {
+      setError("Please sign in before saving tasks.");
+      return;
+    }
+
+    if (!transcriptionText) {
+      setError("Process a voice note before saving extracted tasks.");
+      return;
+    }
+
+    const cleanedTasks: TaskCreatePayload[] = detectedTasks
+      .map((task) => ({
+        title: task.title.trim(),
+        description: task.description?.trim() || null,
+        day_of_week: task.day_of_week,
+        due_date: task.due_date,
+        status: "todo" as const,
+        source_voice_note_id: null,
+      }))
+      .filter((task) => task.title.length > 0);
+
+    setSavingDetectedTasks(true);
+    setError(null);
+
+    try {
+      const saved = await confirmAudioNote(
+        {
+          original_filename: processedFilename || "uploaded-audio",
+          transcription_text: transcriptionText,
+          tasks: cleanedTasks,
+        },
+        authToken,
+      );
+      setDetectedTasks(
+        saved.extracted_tasks.map((task) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          day_of_week: task.day_of_week,
+          due_date: task.due_date,
+          status: task.status,
+          source_voice_note_id: task.source_voice_note_id,
+        })),
+      );
+      await refreshTasks("Could not refresh tasks after saving.", authToken);
+      noteRecorder.clearRecording();
+      setNotePhase("done");
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Could not save detected tasks.");
+    } finally {
+      setSavingDetectedTasks(false);
+    }
+  }
+
+  async function handleCreateManualTask(payload: TaskCreatePayload): Promise<boolean> {
+    if (!authToken) {
+      setError("Please sign in before creating tasks.");
+      return false;
+    }
+
+    setCreatingManualTask(true);
+    setError(null);
+
+    try {
+      await createTask(payload, authToken);
+      await refreshTasks("Could not refresh tasks after creating a task.", authToken);
+      return true;
+    } catch (createError) {
+      setError(
+        createError instanceof Error ? createError.message : "Could not create the task.",
+      );
+      return false;
+    } finally {
+      setCreatingManualTask(false);
     }
   }
 
@@ -274,8 +395,8 @@ export function PlannerClient() {
               Turn one spoken planning note into your private weekly task board.
             </h1>
             <p className="max-w-2xl text-base leading-7 text-slate-600">
-              Record or upload a planning note, let the app transcribe it, and review
-              only your extracted tasks in one place.
+              Record or upload a planning note, edit extracted tasks before saving,
+              and add manual tasks whenever you need them.
             </p>
           </div>
 
@@ -341,15 +462,25 @@ export function PlannerClient() {
         />
         <TranscriptionCard
           detectedTasks={detectedTasks}
+          isSavingDetectedTasks={savingDetectedTasks}
+          onDeleteDetectedTask={deleteDetectedTask}
+          onDetectedTaskFieldChange={updateDetectedTaskField}
+          onSaveDetectedTasks={saveDetectedTasks}
           transcriptionText={transcriptionText}
         />
       </div>
 
-      <WeeklyTaskBoard
-        tasks={tasks}
-        updatingTaskId={updatingTaskId}
-        onToggleTaskStatus={toggleTaskStatus}
-      />
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <ManualTaskCreator
+          isSaving={creatingManualTask}
+          onCreate={handleCreateManualTask}
+        />
+        <WeeklyTaskBoard
+          tasks={tasks}
+          updatingTaskId={updatingTaskId}
+          onToggleTaskStatus={toggleTaskStatus}
+        />
+      </div>
     </main>
   );
 }

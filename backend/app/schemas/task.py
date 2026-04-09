@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
@@ -20,6 +20,7 @@ class TaskCreate(BaseModel):
     title: str
     description: str | None = None
     day_of_week: DayOfWeek | None = None
+    due_date: date | None = None
     status: TaskStatus = "todo"
     source_voice_note_id: str | None = None
 
@@ -28,6 +29,7 @@ class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     day_of_week: DayOfWeek | None = None
+    due_date: date | None = None
     status: TaskStatus | None = None
 
 

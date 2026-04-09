@@ -81,6 +81,11 @@ export function WeeklyTaskBoard({
                         {task.description ? (
                           <p className="text-sm leading-6 text-slate-500">{task.description}</p>
                         ) : null}
+                        {task.due_date ? (
+                          <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+                            {task.due_date}
+                          </p>
+                        ) : null}
                       </div>
 
                       <span

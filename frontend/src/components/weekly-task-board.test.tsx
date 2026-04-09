@@ -15,6 +15,7 @@ describe("WeeklyTaskBoard", () => {
             title: "Finish math homework",
             description: "Chapter 4",
             day_of_week: "Monday",
+            due_date: null,
             status: "todo",
             source_voice_note_id: null,
             created_at: "2026-04-05T10:00:00Z",

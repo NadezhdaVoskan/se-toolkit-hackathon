@@ -1,5 +1,7 @@
 import type {
+  ProcessVoiceNoteResponse,
   Task,
+  TaskCreatePayload,
   TaskUpdatePayload,
   UploadVoiceNoteResponse,
 } from "@/types/task";
@@ -40,17 +42,47 @@ export async function fetchTasks(token: string): Promise<Task[]> {
   }, "Could not fetch tasks from the backend.", token);
 }
 
-export async function uploadAudioNote(
+export async function processAudioNote(
   file: File,
   token: string,
-): Promise<UploadVoiceNoteResponse> {
+): Promise<ProcessVoiceNoteResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
-  return apiRequest<UploadVoiceNoteResponse>("/api/voice-notes/upload", {
+  return apiRequest<ProcessVoiceNoteResponse>("/api/voice-notes/process", {
     method: "POST",
     body: formData,
   }, "Audio upload failed.", token);
+}
+
+export async function confirmAudioNote(
+  payload: {
+    original_filename: string;
+    transcription_text: string;
+    tasks: TaskCreatePayload[];
+  },
+  token: string,
+): Promise<UploadVoiceNoteResponse> {
+  return apiRequest<UploadVoiceNoteResponse>("/api/voice-notes/confirm", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }, "Could not save the extracted tasks.", token);
+}
+
+export async function createTask(
+  payload: TaskCreatePayload,
+  token: string,
+): Promise<Task> {
+  return apiRequest<Task>("/api/tasks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }, "Task creation failed.", token);
 }
 
 export async function updateTask(
