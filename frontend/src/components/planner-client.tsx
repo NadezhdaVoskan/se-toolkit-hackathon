@@ -285,18 +285,21 @@ export function PlannerClient() {
               <p className="mt-1 text-2xl font-semibold text-slate-900">{tasks.length}</p>
             </div>
             <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Account</p>
-              <p className="mt-1 break-all text-sm font-semibold leading-5 text-slate-900">
-                {currentUser.email}
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Recorder</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">Voice Notes Only</p>
             </div>
           </div>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/80 px-4 py-3">
-          <p className="text-sm text-slate-600">
-            You are signed in. New voice notes and tasks are stored only for your account.
-          </p>
+          <div className="min-w-0">
+            <p className="text-sm text-slate-600">
+              You are signed in. New voice notes and tasks are stored only for your account.
+            </p>
+            <p className="truncate text-sm font-semibold text-slate-900" title={currentUser.email}>
+              {currentUser.email}
+            </p>
+          </div>
           <button
             className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
             onClick={handleLogout}
