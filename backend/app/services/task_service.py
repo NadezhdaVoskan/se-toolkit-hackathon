@@ -34,6 +34,8 @@ def create_task(db: Session, payload: TaskCreate, user_id: str) -> Task:
     db.add(record)
     db.commit()
     db.refresh(record)
+    if ensure_recurring_successor(db, record):
+        db.commit()
     return record
 
 
@@ -43,6 +45,8 @@ def create_tasks(db: Session, payloads: list[TaskCreate], user_id: str) -> list[
     db.commit()
     for record in records:
         db.refresh(record)
+    if any(ensure_recurring_successor(db, record) for record in records):
+        db.commit()
     return records
 
 
@@ -52,16 +56,11 @@ def update_task(db: Session, task_id: str, payload: TaskUpdate, user_id: str) ->
         return None
 
     normalized_fields = normalize_task_update_payload(payload, record)
-    should_spawn_recurring_task = should_create_recurring_successor(record, normalized_fields)
     for field, value in normalized_fields.items():
         setattr(record, field, value)
 
-    if should_spawn_recurring_task:
-        next_task = build_recurring_successor(record, normalized_fields)
-        if next_task is not None and not has_matching_recurring_successor(db, record, next_task):
-            db.add(next_task)
-
     db.add(record)
+    ensure_recurring_successor(db, record)
     db.commit()
     db.refresh(record)
     return record
@@ -69,6 +68,30 @@ def update_task(db: Session, task_id: str, payload: TaskUpdate, user_id: str) ->
 
 def delete_task(db: Session, task: Task) -> None:
     db.delete(task)
+    db.commit()
+
+
+def delete_task_and_future(db: Session, task: Task) -> None:
+    if task.recurrence != "weekly" or task.due_date is None:
+        delete_task(db, task)
+        return
+
+    description_clause = (
+        Task.description.is_(None)
+        if task.description is None
+        else Task.description == task.description
+    )
+    statement = select(Task).where(
+        Task.user_id == task.user_id,
+        Task.title == task.title,
+        description_clause,
+        Task.recurrence == task.recurrence,
+        Task.due_date.is_not(None),
+        Task.due_date >= task.due_date,
+    )
+    matching_tasks = list(db.scalars(statement))
+    for matching_task in matching_tasks:
+        db.delete(matching_task)
     db.commit()
 
 
@@ -142,24 +165,26 @@ def normalize_task_update_payload(payload: TaskUpdate, record: Task) -> dict:
     return normalized_fields
 
 
-def should_create_recurring_successor(record: Task, normalized_fields: dict) -> bool:
-    next_status = normalized_fields.get("status", record.status)
-    next_recurrence = normalized_fields.get("recurrence", record.recurrence)
-    return record.status != "done" and next_status == "done" and next_recurrence == "weekly"
+def ensure_recurring_successor(db: Session, record: Task) -> bool:
+    next_task = build_recurring_successor(record)
+    if next_task is None or has_matching_recurring_successor(db, record, next_task):
+        return False
+
+    db.add(next_task)
+    return True
 
 
-def build_recurring_successor(record: Task, normalized_fields: dict) -> Task | None:
-    next_due_date = normalized_fields.get("due_date", record.due_date) or date.today()
-    recurrence = normalized_fields.get("recurrence", record.recurrence)
-    if recurrence != "weekly":
+def build_recurring_successor(record: Task) -> Task | None:
+    next_due_date = record.due_date or date.today()
+    if record.recurrence != "weekly":
         return None
 
     return Task(
-        title=normalized_fields.get("title", record.title),
-        description=normalized_fields.get("description", record.description),
+        title=record.title,
+        description=record.description,
         day_of_week=None,
         due_date=next_due_date + timedelta(days=7),
-        recurrence=recurrence,
+        recurrence=record.recurrence,
         status="todo",
         source_voice_note_id=record.source_voice_note_id,
         user_id=record.user_id,

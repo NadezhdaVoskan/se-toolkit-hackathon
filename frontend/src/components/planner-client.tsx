@@ -263,7 +263,7 @@ export function PlannerClient() {
     }
   }
 
-  async function removeTask(task: Task) {
+  async function removeTask(task: Task, scope: "single" | "future" = "single") {
     if (!authToken) {
       setError("Please sign in to delete tasks.");
       return;
@@ -273,7 +273,7 @@ export function PlannerClient() {
     setError(null);
 
     try {
-      await deleteTask(task.id, authToken);
+      await deleteTask(task.id, authToken, scope);
       await refreshTasks("Could not refresh tasks after deleting a task.", authToken);
     } catch (deleteError) {
       setError(

@@ -7,7 +7,7 @@ type TaskStatusFilter = "all" | "todo" | "done";
 
 type WeeklyTaskBoardProps = {
   deletingTaskId: string | null;
-  onDeleteTask: (task: Task) => Promise<void>;
+  onDeleteTask: (task: Task, scope?: "single" | "future") => Promise<void>;
   onEditTask: (task: Task, payload: TaskCreatePayload) => Promise<boolean>;
   tasks: Task[];
   updatingTaskId: string | null;
@@ -46,6 +46,7 @@ export function WeeklyTaskBoard({
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState<TaskCreatePayload | null>(null);
+  const [deleteChoiceTaskId, setDeleteChoiceTaskId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>("all");
 
   const referenceDate = new Date();
@@ -356,13 +357,63 @@ export function WeeklyTaskBoard({
                               className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3.5 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
                               disabled={deletingTaskId === task.id}
                               onClick={() => {
-                                void onDeleteTask(task);
+                                if (task.recurrence === "weekly") {
+                                  setDeleteChoiceTaskId((current) =>
+                                    current === task.id ? null : task.id,
+                                  );
+                                  return;
+                                }
+
+                                void onDeleteTask(task, "single");
                               }}
                               type="button"
                             >
                               {deletingTaskId === task.id ? "Deleting..." : "Delete"}
                             </button>
                           </div>
+
+                          {task.recurrence === "weekly" && deleteChoiceTaskId === task.id ? (
+                            <div className="mt-3 rounded-2xl border border-rose-100 bg-rose-50/70 p-3">
+                              <p className="text-sm font-medium text-rose-900">
+                                Delete just this task or this task and the future repeats?
+                              </p>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <button
+                                  className="rounded-xl border border-rose-200 bg-white px-3.5 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                  disabled={deletingTaskId === task.id}
+                                  onClick={() => {
+                                    void onDeleteTask(task, "single").then(() => {
+                                      setDeleteChoiceTaskId(null);
+                                    });
+                                  }}
+                                  type="button"
+                                >
+                                  Delete this one
+                                </button>
+                                <button
+                                  className="rounded-xl bg-rose-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300"
+                                  disabled={deletingTaskId === task.id}
+                                  onClick={() => {
+                                    void onDeleteTask(task, "future").then(() => {
+                                      setDeleteChoiceTaskId(null);
+                                    });
+                                  }}
+                                  type="button"
+                                >
+                                  Delete this and future ones
+                                </button>
+                                <button
+                                  className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300"
+                                  onClick={() => {
+                                    setDeleteChoiceTaskId(null);
+                                  }}
+                                  type="button"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
                         </>
                       )}
                     </article>

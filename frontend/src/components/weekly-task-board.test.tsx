@@ -71,6 +71,10 @@ describe("WeeklyTaskBoard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
     expect(onToggleTaskStatus).toHaveBeenCalledTimes(1);
 
+    fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    expect(screen.getByRole("button", { name: "Delete this one" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete this and future ones" })).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.queryByText("Finish math homework")).not.toBeInTheDocument();
     expect(screen.getByText("Submit lab report")).toBeInTheDocument();

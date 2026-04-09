@@ -1,11 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.task import TaskCreate, TaskRead, TaskUpdate
-from app.services.task_service import create_task, delete_task, get_task, list_tasks, update_task
+from app.services.task_service import (
+    create_task,
+    delete_task,
+    delete_task_and_future,
+    get_task,
+    list_tasks,
+    update_task,
+)
 
 router = APIRouter()
 
@@ -43,6 +52,7 @@ def update_task_endpoint(
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task_endpoint(
     task_id: str,
+    scope: Literal["single", "future"] = Query(default="single"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Response:
@@ -50,5 +60,8 @@ def delete_task_endpoint(
     if task is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found.")
 
-    delete_task(db, task)
+    if scope == "future":
+        delete_task_and_future(db, task)
+    else:
+        delete_task(db, task)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
