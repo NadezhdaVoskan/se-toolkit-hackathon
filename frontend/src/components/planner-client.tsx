@@ -407,7 +407,7 @@ export function PlannerClient() {
         <section className="rounded-[32px] border border-white/80 bg-[linear-gradient(140deg,rgba(255,255,255,0.96),rgba(242,248,246,0.9))] px-6 py-8 shadow-[0_28px_90px_-38px_rgba(15,23,42,0.35)] md:px-8 md:py-10">
           <div className="max-w-3xl space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.34em] text-emerald-700">
-              Voice Weekly Planner
+              SpeakPlan
             </p>
             <h1 className="text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">
               Sign in to keep your voice notes and tasks in one place.
@@ -445,7 +445,7 @@ export function PlannerClient() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.34em] text-emerald-700">
-              Voice Weekly Planner
+              SpeakPlan
             </p>
             <h1 className="text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">
               Turn one spoken planning note into your private weekly task board.

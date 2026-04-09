@@ -26,7 +26,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      APP_NAME: ${APP_NAME:-Voice Weekly Planner API}
+      APP_NAME: ${APP_NAME:-SpeakPlan API}
       API_PREFIX: ${API_PREFIX:-/api}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-planner}:${POSTGRES_PASSWORD:-planner}@db:5432/${POSTGRES_DB:-voice_weekly_planner}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://10.93.25.188,http://localhost:3000,http://127.0.0.1:3000}

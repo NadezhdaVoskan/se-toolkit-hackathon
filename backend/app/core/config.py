@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "Voice Weekly Planner API"
+    app_name: str = "SpeakPlan API"
     api_prefix: str = "/api"
     database_url: str = "postgresql+psycopg://planner:planner@localhost:5432/voice_weekly_planner"
     allowed_origins: str = Field(default="http://localhost:3000")

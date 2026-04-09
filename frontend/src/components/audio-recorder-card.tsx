@@ -46,9 +46,11 @@ export function AudioRecorderCard({
       title={title}
       description={description}
       action={
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-600">
-          {statusLabel}
-        </span>
+        statusLabel ? (
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-600">
+            {statusLabel}
+          </span>
+        ) : null
       }
     >
       <div className="space-y-5">
@@ -129,7 +131,7 @@ function getStatusLabel(
   phase: WorkflowPhase,
   isRecording: boolean,
   canUpload: boolean,
-): string {
+): string | null {
   if (isRecording || phase === "recording") {
     return "Recording";
   }
@@ -150,5 +152,5 @@ function getStatusLabel(
     return "Completed";
   }
 
-  return canUpload ? "Ready to upload" : "Idle";
+  return canUpload ? "Ready to upload" : null;
 }
