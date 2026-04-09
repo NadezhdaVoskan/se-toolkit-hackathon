@@ -1,5 +1,6 @@
 import React from "react";
 
+import { EnglishDateInput } from "@/components/english-date-input";
 import type { TaskDraft } from "@/types/task";
 
 type TaskDraftEditorProps = {
@@ -75,12 +76,11 @@ export function TaskDraftEditor({
 
             <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
               Date
-              <input
+              <EnglishDateInput
                 className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm normal-case tracking-normal text-slate-900 outline-none transition focus:border-emerald-500"
-                onChange={(event) => {
-                  onFieldChange(task.id, "due_date", event.target.value);
+                onChange={(value) => {
+                  onFieldChange(task.id, "due_date", value);
                 }}
-                type="date"
                 value={task.due_date ?? ""}
               />
             </label>

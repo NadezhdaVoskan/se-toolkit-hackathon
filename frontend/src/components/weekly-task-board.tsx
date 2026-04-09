@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import { EnglishDateInput } from "@/components/english-date-input";
 import { SectionCard } from "@/components/section-card";
 import type { DayOfWeek, Task, TaskCreatePayload } from "@/types/task";
 
@@ -210,20 +211,19 @@ export function WeeklyTaskBoard({
                             }}
                             value={editingDraft.description ?? ""}
                           />
-                          <input
+                          <EnglishDateInput
                             className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
-                            onChange={(event) => {
+                            onChange={(value) => {
                               setEditingDraft((current) =>
                                 current
                                   ? {
                                       ...current,
                                       day_of_week: null,
-                                      due_date: event.target.value || null,
+                                      due_date: value || null,
                                     }
                                   : current,
                               );
                             }}
-                            type="date"
                             value={editingDraft.due_date ?? ""}
                           />
 
