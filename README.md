@@ -84,7 +84,7 @@ Optional but useful:
 1. Clone the repository on the VM.
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/NadezhdaVoskan/se-toolkit-hackathon
 cd SpeakPlan
 ```
 
