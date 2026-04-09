@@ -8,6 +8,7 @@ const internalApiBaseUrl = (process.env.INTERNAL_API_BASE_URL ?? "http://backend
 
 const nextConfig: NextConfig = {
   allowedDevOrigins,
+  devIndicators: false,
   output: "standalone",
   async rewrites() {
     return [
