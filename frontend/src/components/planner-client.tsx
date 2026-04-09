@@ -470,17 +470,16 @@ export function PlannerClient() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <ManualTaskCreator
-          isSaving={creatingManualTask}
-          onCreate={handleCreateManualTask}
-        />
-        <WeeklyTaskBoard
-          tasks={tasks}
-          updatingTaskId={updatingTaskId}
-          onToggleTaskStatus={toggleTaskStatus}
-        />
-      </div>
+      <ManualTaskCreator
+        isSaving={creatingManualTask}
+        onCreate={handleCreateManualTask}
+      />
+
+      <WeeklyTaskBoard
+        tasks={tasks}
+        updatingTaskId={updatingTaskId}
+        onToggleTaskStatus={toggleTaskStatus}
+      />
     </main>
   );
 }
