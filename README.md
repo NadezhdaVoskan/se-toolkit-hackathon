@@ -3,12 +3,11 @@
 Turn voice notes into private weekly tasks with manual editing, scheduling, and simple weekly planning.
 
 ## Demo
-<img width="1668" height="908" alt="image" src="https://github.com/user-attachments/assets/775991bc-9603-468e-9b70-29bed165d99f" />
-<img width="1576" height="917" alt="image" src="https://github.com/user-attachments/assets/8027b812-476a-4650-91ab-3f42d6ea2d63" />
-<img width="1640" height="889" alt="image" src="https://github.com/user-attachments/assets/6aec4bce-5b5c-4090-bc78-2ad697bcd78c" />
-
-<img width="1604" height="925" alt="image" src="https://github.com/user-attachments/assets/b74e72c2-7c2d-421c-9f62-2ba808232f24" />
-
+<img width="1825" height="503" alt="image" src="https://github.com/user-attachments/assets/cf98a9aa-c5b1-4960-9349-f180fc6b1050" />
+<img width="1826" height="831" alt="image" src="https://github.com/user-attachments/assets/9bc5cb11-a1cd-4c04-a13d-2c388dd32cc6" />
+<img width="1826" height="920" alt="image" src="https://github.com/user-attachments/assets/0b637a30-d922-4d49-9e5e-d384206f626d" />
+<img width="1800" height="740" alt="image" src="https://github.com/user-attachments/assets/407fa869-7744-4b34-b9e3-24504ec1f548" />
+<img width="1598" height="905" alt="image" src="https://github.com/user-attachments/assets/d9bcae26-8e37-4b42-ae87-7f8a655f093c" />
 
 ## Product Context
 
