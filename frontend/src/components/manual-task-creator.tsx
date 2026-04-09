@@ -72,7 +72,7 @@ export function ManualTaskCreator({ isSaving, onCreate }: ManualTaskCreatorProps
           Date
           <EnglishDateInput
             calendarPlacement="top"
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
             onChange={(value) => {
               setFormState((current) => ({
                 ...current,
