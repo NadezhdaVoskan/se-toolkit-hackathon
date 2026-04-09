@@ -244,7 +244,7 @@ export function PlannerClient() {
         {
           title: payload.title.trim(),
           description: payload.description?.trim() || null,
-          day_of_week: payload.day_of_week,
+          day_of_week: null,
           due_date: payload.due_date,
         },
         authToken,

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { SectionCard } from "@/components/section-card";
-import type { DayOfWeek, TaskCreatePayload } from "@/types/task";
+import type { TaskCreatePayload } from "@/types/task";
 
 type ManualTaskCreatorProps = {
   isSaving: boolean;
@@ -17,17 +17,6 @@ const initialFormState: TaskCreatePayload = {
   source_voice_note_id: null,
 };
 
-const weekdayOptions: Array<DayOfWeek | ""> = [
-  "",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
 export function ManualTaskCreator({ isSaving, onCreate }: ManualTaskCreatorProps) {
   const [formState, setFormState] = useState<TaskCreatePayload>(initialFormState);
 
@@ -36,6 +25,7 @@ export function ManualTaskCreator({ isSaving, onCreate }: ManualTaskCreatorProps
       ...formState,
       title: formState.title.trim(),
       description: formState.description?.trim() || null,
+      day_of_week: null,
       source_voice_note_id: null,
       status: "todo",
     });
@@ -75,42 +65,20 @@ export function ManualTaskCreator({ isSaving, onCreate }: ManualTaskCreatorProps
           />
         </label>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Day
-            <select
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
-              onChange={(event) => {
-                setFormState((current) => ({
-                  ...current,
-                  day_of_week: (event.target.value || null) as DayOfWeek | null,
-                }));
-              }}
-              value={formState.day_of_week ?? ""}
-            >
-              {weekdayOptions.map((option) => (
-                <option key={option || "none"} value={option}>
-                  {option || "No day"}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Date
-            <input
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
-              onChange={(event) => {
-                setFormState((current) => ({
-                  ...current,
-                  due_date: event.target.value || null,
-                }));
-              }}
-              type="date"
-              value={formState.due_date ?? ""}
-            />
-          </label>
-        </div>
+        <label className="grid gap-2 text-sm font-medium text-slate-700">
+          Date
+          <input
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
+            onChange={(event) => {
+              setFormState((current) => ({
+                ...current,
+                due_date: event.target.value || null,
+              }));
+            }}
+            type="date"
+            value={formState.due_date ?? ""}
+          />
+        </label>
 
         <button
           className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"

@@ -178,43 +178,22 @@ export function WeeklyTaskBoard({
                             }}
                             value={editingDraft.description ?? ""}
                           />
-                          <div className="grid gap-3">
-                            <select
-                              className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
-                              onChange={(event) => {
-                                setEditingDraft((current) =>
-                                  current
-                                    ? {
-                                        ...current,
-                                        day_of_week: (event.target.value || null) as DayOfWeek | null,
-                                      }
-                                    : current,
-                                );
-                              }}
-                              value={editingDraft.day_of_week ?? ""}
-                            >
-                              <option value="">No day</option>
-                              {weekdayOrder
-                                .filter((value): value is DayOfWeek => value !== "Unscheduled")
-                                .map((dayValue) => (
-                                  <option key={dayValue} value={dayValue}>
-                                    {dayValue}
-                                  </option>
-                                ))}
-                            </select>
-                            <input
-                              className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
-                              onChange={(event) => {
-                                setEditingDraft((current) =>
-                                  current
-                                    ? { ...current, due_date: event.target.value || null }
-                                    : current,
-                                );
-                              }}
-                              type="date"
-                              value={editingDraft.due_date ?? ""}
-                            />
-                          </div>
+                          <input
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500"
+                            onChange={(event) => {
+                              setEditingDraft((current) =>
+                                current
+                                  ? {
+                                      ...current,
+                                      day_of_week: null,
+                                      due_date: event.target.value || null,
+                                    }
+                                  : current,
+                              );
+                            }}
+                            type="date"
+                            value={editingDraft.due_date ?? ""}
+                          />
 
                           <div className="flex flex-wrap gap-2">
                             <button
@@ -302,7 +281,7 @@ export function WeeklyTaskBoard({
                                 setEditingDraft({
                                   title: task.title,
                                   description: task.description,
-                                  day_of_week: task.day_of_week,
+                                  day_of_week: null,
                                   due_date: task.due_date,
                                   status: task.status,
                                   source_voice_note_id: task.source_voice_note_id,
