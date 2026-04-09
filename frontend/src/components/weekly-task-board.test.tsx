@@ -4,6 +4,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { WeeklyTaskBoard } from "./weekly-task-board";
 
 describe("WeeklyTaskBoard", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-09T10:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("groups tasks by weekday and renders the action button", () => {
     const onToggleTaskStatus = vi.fn().mockResolvedValue(undefined);
 
@@ -29,6 +38,11 @@ describe("WeeklyTaskBoard", () => {
 
     expect(screen.getByText("Finish math homework")).toBeInTheDocument();
     expect(screen.getByText("Monday")).toBeInTheDocument();
+    expect(screen.getByText("Apr 6 - 12")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous Week" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Current Week" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next Week" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Today" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
     expect(onToggleTaskStatus).toHaveBeenCalledTimes(1);

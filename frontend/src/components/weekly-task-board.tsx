@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+
 import { SectionCard } from "@/components/section-card";
 import type { DayOfWeek, Task } from "@/types/task";
 
@@ -19,111 +20,275 @@ const weekdayOrder: Array<DayOfWeek | "Unscheduled"> = [
   "Unscheduled",
 ];
 
+const weekdayIndexMap: Record<DayOfWeek, number> = {
+  Monday: 0,
+  Tuesday: 1,
+  Wednesday: 2,
+  Thursday: 3,
+  Friday: 4,
+  Saturday: 5,
+  Sunday: 6,
+};
+
 export function WeeklyTaskBoard({
   tasks,
   updatingTaskId,
   onToggleTaskStatus,
 }: WeeklyTaskBoardProps) {
+  const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
+
+  const referenceDate = new Date();
+  const currentWeekStart = getStartOfWeek(referenceDate);
+  const selectedWeekStart = addDays(currentWeekStart, selectedWeekOffset * 7);
+  const selectedWeekEnd = addDays(selectedWeekStart, 6);
+  const weekLabel = formatWeekRange(selectedWeekStart, selectedWeekEnd);
+
   const groups = weekdayOrder.map((day) => ({
     day,
-    items: tasks.filter((task) =>
-      day === "Unscheduled" ? task.day_of_week === null : task.day_of_week === day,
-    ),
+    date: day === "Unscheduled" ? null : addDays(selectedWeekStart, weekdayIndexMap[day]),
+    items: tasks.filter((task) => belongsToGroup(task, day, selectedWeekStart, selectedWeekEnd)),
   }));
 
   return (
     <SectionCard
       title="Weekly Tasks"
-      description="Review extracted tasks and manually mark each one as done when you finish it."
+      description="Review tasks for the selected week and manually mark each one as done when you finish it."
       action={
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-slate-600">
           {tasks.length} total
         </span>
       }
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {groups.map(({ day, items }) => (
-          <section
-            key={day}
-            className="rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4"
-          >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600">
-                {day}
-              </h3>
-              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-500">
-                {items.length}
-              </span>
-            </div>
+      <div className="space-y-5">
+        <div className="flex flex-col gap-4 rounded-3xl border border-slate-200/80 bg-slate-50/80 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+              Selected Week
+            </p>
+            <h3 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
+              {weekLabel}
+            </h3>
+          </div>
 
-            <div className="space-y-3">
-              {items.length > 0 ? (
-                items.map((task) => (
-                  <article
-                    key={task.id}
-                    className={`rounded-2xl border px-4 py-4 transition ${
-                      task.status === "done"
-                        ? "border-emerald-200 bg-emerald-50"
-                        : "border-white bg-white"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-2">
-                        <p
-                          className={`text-sm font-semibold leading-6 ${
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+              onClick={() => {
+                setSelectedWeekOffset((current) => current - 1);
+              }}
+              type="button"
+            >
+              Previous Week
+            </button>
+            <button
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+              onClick={() => {
+                setSelectedWeekOffset(0);
+              }}
+              type="button"
+            >
+              Current Week
+            </button>
+            <button
+              className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
+              onClick={() => {
+                setSelectedWeekOffset((current) => current + 1);
+              }}
+              type="button"
+            >
+              Next Week
+            </button>
+            <button
+              className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              onClick={() => {
+                setSelectedWeekOffset(0);
+              }}
+              type="button"
+            >
+              Today
+            </button>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {groups.map(({ day, date, items }) => (
+            <section
+              key={day}
+              className="rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4"
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-600">
+                    {day}
+                  </h3>
+                  {date ? (
+                    <p className="mt-1 text-xs font-medium text-slate-400">
+                      {formatDayLabel(date)}
+                    </p>
+                  ) : null}
+                </div>
+                <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-500">
+                  {items.length}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {items.length > 0 ? (
+                  items.map((task) => (
+                    <article
+                      key={task.id}
+                      className={`rounded-2xl border px-4 py-4 transition ${
+                        task.status === "done"
+                          ? "border-emerald-200 bg-emerald-50"
+                          : "border-white bg-white"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-2">
+                          <p
+                            className={`text-sm font-semibold leading-6 ${
+                              task.status === "done"
+                                ? "text-emerald-900 line-through decoration-2"
+                                : "text-slate-900"
+                            }`}
+                          >
+                            {task.title}
+                          </p>
+                          {task.description ? (
+                            <p className="text-sm leading-6 text-slate-500">{task.description}</p>
+                          ) : null}
+                          {task.due_date ? (
+                            <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
+                              {task.due_date}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                             task.status === "done"
-                              ? "text-emerald-900 line-through decoration-2"
-                              : "text-slate-900"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-slate-100 text-slate-600"
                           }`}
                         >
-                          {task.title}
-                        </p>
-                        {task.description ? (
-                          <p className="text-sm leading-6 text-slate-500">{task.description}</p>
-                        ) : null}
-                        {task.due_date ? (
-                          <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
-                            {task.due_date}
-                          </p>
-                        ) : null}
+                          {task.status}
+                        </span>
                       </div>
 
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                          task.status === "done"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
+                      <button
+                        className="mt-4 inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={updatingTaskId === task.id}
+                        onClick={() => {
+                          void onToggleTaskStatus(task);
+                        }}
+                        type="button"
                       >
-                        {task.status}
-                      </span>
-                    </div>
-
-                    <button
-                      className="mt-4 inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={updatingTaskId === task.id}
-                      onClick={() => {
-                        void onToggleTaskStatus(task);
-                      }}
-                      type="button"
-                    >
-                      {updatingTaskId === task.id
-                        ? "Saving..."
-                        : task.status === "done"
-                          ? "Mark as todo"
-                          : "Mark as done"}
-                    </button>
-                  </article>
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-400">
-                  No tasks for this day yet.
-                </div>
-              )}
-            </div>
-          </section>
-        ))}
+                        {updatingTaskId === task.id
+                          ? "Saving..."
+                          : task.status === "done"
+                            ? "Mark as todo"
+                            : "Mark as done"}
+                      </button>
+                    </article>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-400">
+                    No tasks for this day yet.
+                  </div>
+                )}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </SectionCard>
   );
+}
+
+function belongsToGroup(
+  task: Task,
+  group: DayOfWeek | "Unscheduled",
+  selectedWeekStart: Date,
+  selectedWeekEnd: Date,
+): boolean {
+  if (task.due_date) {
+    const dueDate = parseLocalDate(task.due_date);
+    if (!dueDate) {
+      return group === "Unscheduled";
+    }
+
+    if (dueDate < selectedWeekStart || dueDate > selectedWeekEnd) {
+      return false;
+    }
+
+    if (group === "Unscheduled") {
+      return false;
+    }
+
+    return getDayOfWeekFromDate(dueDate) === group;
+  }
+
+  if (group === "Unscheduled") {
+    return task.day_of_week === null;
+  }
+
+  return task.day_of_week === group;
+}
+
+function getStartOfWeek(date: Date): Date {
+  const copy = new Date(date);
+  const day = copy.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  copy.setHours(0, 0, 0, 0);
+  copy.setDate(copy.getDate() + diff);
+  return copy;
+}
+
+function addDays(date: Date, amount: number): Date {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + amount);
+  return copy;
+}
+
+function formatWeekRange(start: Date, end: Date): string {
+  const startMonth = start.toLocaleDateString("en-US", { month: "short" });
+  const endMonth = end.toLocaleDateString("en-US", { month: "short" });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay} - ${endDay}`;
+  }
+
+  return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+}
+
+function formatDayLabel(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function parseLocalDate(value: string): Date | null {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day);
+}
+
+function getDayOfWeekFromDate(date: Date): DayOfWeek {
+  const index = date.getDay();
+  const mapping: DayOfWeek[] = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  return mapping[index];
 }
