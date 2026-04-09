@@ -157,7 +157,9 @@ export function WeeklyTaskBoard({
           {groups.map(({ day, date, items }) => (
             <section
               key={day}
-              className="rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4"
+              className={`relative rounded-3xl border border-slate-200/80 bg-slate-50/80 p-4 ${
+                items.some((task) => task.id === editingTaskId) ? "z-20" : "z-0"
+              }`}
             >
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
@@ -180,11 +182,11 @@ export function WeeklyTaskBoard({
                   items.map((task) => (
                     <article
                       key={task.id}
-                      className={`rounded-2xl border px-4 py-4 transition ${
+                      className={`relative rounded-2xl border px-4 py-4 transition ${
                         task.status === "done"
                           ? "border-emerald-200 bg-emerald-50"
                           : "border-white bg-white"
-                      }`}
+                      } ${editingTaskId === task.id ? "z-30" : "z-0"}`}
                     >
                       {editingTaskId === task.id && editingDraft ? (
                         <div className="space-y-3">
