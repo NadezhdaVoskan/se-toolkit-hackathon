@@ -14,6 +14,7 @@ def test_upload_voice_note_creates_transcription_and_tasks(client, auth_headers)
     assert payload["voice_note"]["original_filename"] == "weekly-plan.webm"
     assert len(payload["extracted_tasks"]) == 2
     assert payload["extracted_tasks"][0]["source_voice_note_id"] == payload["voice_note"]["id"]
+    assert payload["extracted_tasks"][0]["due_date"] is not None
 
     list_response = client.get("/api/tasks", headers=headers)
     assert list_response.status_code == 200

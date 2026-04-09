@@ -1,10 +1,21 @@
+from datetime import date, timedelta
 from difflib import SequenceMatcher
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.task import Task
-from app.schemas.task import TaskCreate, TaskUpdate
+from app.schemas.task import DayOfWeek, TaskCreate, TaskUpdate
+
+WEEKDAY_TO_INDEX: dict[DayOfWeek, int] = {
+    "Monday": 0,
+    "Tuesday": 1,
+    "Wednesday": 2,
+    "Thursday": 3,
+    "Friday": 4,
+    "Saturday": 5,
+    "Sunday": 6,
+}
 
 
 def list_tasks(db: Session, user_id: str) -> list[Task]:
@@ -18,7 +29,8 @@ def get_task(db: Session, task_id: str, user_id: str) -> Task | None:
 
 
 def create_task(db: Session, payload: TaskCreate, user_id: str) -> Task:
-    record = Task(**payload.model_dump(), user_id=user_id)
+    normalized_payload = normalize_task_payload(payload)
+    record = Task(**normalized_payload.model_dump(), user_id=user_id)
     db.add(record)
     db.commit()
     db.refresh(record)
@@ -26,7 +38,7 @@ def create_task(db: Session, payload: TaskCreate, user_id: str) -> Task:
 
 
 def create_tasks(db: Session, payloads: list[TaskCreate], user_id: str) -> list[Task]:
-    records = [Task(**payload.model_dump(), user_id=user_id) for payload in payloads]
+    records = [Task(**normalize_task_payload(payload).model_dump(), user_id=user_id) for payload in payloads]
     db.add_all(records)
     db.commit()
     for record in records:
@@ -39,7 +51,8 @@ def update_task(db: Session, task_id: str, payload: TaskUpdate, user_id: str) ->
     if record is None:
         return None
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    normalized_fields = normalize_task_update_payload(payload, record)
+    for field, value in normalized_fields.items():
         setattr(record, field, value)
 
     db.add(record)
@@ -103,3 +116,29 @@ def similarity_score(left: str, right: str) -> float:
     overlap = len(left_tokens & right_tokens) / max(len(left_tokens), len(right_tokens))
     sequence = SequenceMatcher(None, left, right).ratio()
     return max(overlap, (overlap + sequence) / 2)
+
+
+def normalize_task_payload(payload: TaskCreate) -> TaskCreate:
+    if payload.due_date is not None or payload.day_of_week is None:
+        return payload
+
+    return payload.model_copy(update={"due_date": resolve_next_due_date(payload.day_of_week)})
+
+
+def normalize_task_update_payload(payload: TaskUpdate, record: Task) -> dict:
+    normalized_fields = payload.model_dump(exclude_unset=True)
+    next_day_of_week = normalized_fields.get("day_of_week", record.day_of_week)
+    next_due_date = normalized_fields.get("due_date", record.due_date)
+
+    if next_due_date is None and next_day_of_week is not None:
+        normalized_fields["due_date"] = resolve_next_due_date(next_day_of_week)
+
+    return normalized_fields
+
+
+def resolve_next_due_date(day_of_week: DayOfWeek) -> date:
+    today = date.today()
+    target_index = WEEKDAY_TO_INDEX[day_of_week]
+    current_index = today.weekday()
+    days_ahead = (target_index - current_index) % 7
+    return today + timedelta(days=days_ahead)

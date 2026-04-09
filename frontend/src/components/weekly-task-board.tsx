@@ -46,7 +46,9 @@ export function WeeklyTaskBoard({
   const groups = weekdayOrder.map((day) => ({
     day,
     date: day === "Unscheduled" ? null : addDays(selectedWeekStart, weekdayIndexMap[day]),
-    items: tasks.filter((task) => belongsToGroup(task, day, selectedWeekStart, selectedWeekEnd)),
+    items: tasks.filter((task) =>
+      belongsToGroup(task, day, selectedWeekStart, selectedWeekEnd, selectedWeekOffset),
+    ),
   }));
 
   return (
@@ -210,6 +212,7 @@ function belongsToGroup(
   group: DayOfWeek | "Unscheduled",
   selectedWeekStart: Date,
   selectedWeekEnd: Date,
+  selectedWeekOffset: number,
 ): boolean {
   if (task.due_date) {
     const dueDate = parseLocalDate(task.due_date);
@@ -226,6 +229,10 @@ function belongsToGroup(
     }
 
     return getDayOfWeekFromDate(dueDate) === group;
+  }
+
+  if (selectedWeekOffset !== 0) {
+    return false;
   }
 
   if (group === "Unscheduled") {

@@ -17,6 +17,7 @@ def test_create_task(client, auth_headers):
     assert payload["title"] == "Finish math homework"
     assert payload["description"] == "Chapter 4 exercises"
     assert payload["day_of_week"] == "Monday"
+    assert payload["due_date"] is not None
     assert payload["status"] == "todo"
     assert payload["id"]
 
@@ -46,3 +47,23 @@ def test_update_task_status(client, auth_headers):
     payload = update_response.json()
     assert payload["id"] == task_id
     assert payload["status"] == "done"
+
+
+def test_create_task_assigns_due_date_from_day_of_week(client, auth_headers):
+    headers = auth_headers()
+
+    response = client.post(
+        "/api/tasks",
+        json={
+            "title": "Attend seminar",
+            "description": "Room 301",
+            "day_of_week": "Thursday",
+            "status": "todo",
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["day_of_week"] == "Thursday"
+    assert payload["due_date"] is not None
