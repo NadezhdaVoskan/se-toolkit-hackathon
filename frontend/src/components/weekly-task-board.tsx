@@ -65,6 +65,7 @@ export function WeeklyTaskBoard({
       belongsToGroup(task, day, selectedWeekStart, selectedWeekEnd, selectedWeekOffset),
     ),
   }));
+  const selectedWeekTaskCount = groups.reduce((total, group) => total + group.items.length, 0);
 
   return (
     <SectionCard
@@ -149,7 +150,7 @@ export function WeeklyTaskBoard({
             </button>
           ))}
           <span className="text-sm text-slate-500">
-            Showing {visibleTasks.length} of {tasks.length} tasks
+            Showing {selectedWeekTaskCount} tasks for this week
           </span>
         </div>
 
