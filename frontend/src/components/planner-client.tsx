@@ -286,7 +286,9 @@ export function PlannerClient() {
             </div>
             <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Account</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">{currentUser.email}</p>
+              <p className="mt-1 break-all text-sm font-semibold leading-5 text-slate-900">
+                {currentUser.email}
+              </p>
             </div>
           </div>
         </div>
